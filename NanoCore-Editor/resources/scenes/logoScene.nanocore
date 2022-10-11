@@ -1,0 +1,69 @@
+Scene: Untitled
+Entities:
+  - Entity: 9235617827118161440
+    TagComponent:
+      Tag: Nano_cube_Top
+    TransformComponent:
+      Translation: [0.0139007773, 0.5, 0.0139007727]
+      Rotation: [1.57079613, 0.785398245, -4.21468513e-08]
+      Scale: [0.999999881, 0.999999285, 0.999996901]
+    SpriteRendererComponent:
+      Color: [0.596923113, 1, 0, 1]
+      TexturePath: resources\textures\logo.png
+      TilingFactor: 1
+  - Entity: 15355018394736438603
+    TagComponent:
+      Tag: Nano_cube_Camera
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [-0.404916406, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFOV: 0.52359879
+        PerspectiveNear: 0.00999999978
+        PerspectiveFar: 1000
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 1
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 15355018394736438603
+    TagComponent:
+      Tag: Nano_cube_Camera
+    TransformComponent:
+      Translation: [0, 1.70000005, 4]
+      Rotation: [-0.404916406, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFOV: 0.52359879
+        PerspectiveNear: 0.00999999978
+        PerspectiveFar: 1000
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 1
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 2335431429201735937
+    TagComponent:
+      Tag: Nano_cube_Right
+    TransformComponent:
+      Translation: [2.25682282, 0, 2.25482225]
+      Rotation: [0, 0.785398245, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [1, 0, 0, 1]
+      TilingFactor: 1
+  - Entity: 8244940659429586525
+    TagComponent:
+      Tag: Nano_cube_Left
+    TransformComponent:
+      Translation: [-3.35580564, 0, -2.65080643]
+      Rotation: [0, -0.785398245, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [0, 1, 0, 1]
+      TilingFactor: 1
