@@ -22,3 +22,7 @@
 #define RA_STRINGIFY_MACRO(x) #x
 //
 #define BIT(x) (1 << x)
+
+
+
+using byte = uint8_t;

@@ -95,8 +95,11 @@ namespace NanoCore{
 	class Texture2D : public Texture
 	{
 	public:
+
 		static Shared<Texture2D> Create(uint32_t width, uint32_t height);
-		static Shared<Texture2D> Create(const std::string& path);
+		static Shared<Texture2D> Create(ImageFormat format, uint32_t width, uint32_t height, const void* data = nullptr, TextureProperties properties = TextureProperties());
+		static Shared<Texture2D> Create(const std::string& path, TextureProperties properties = TextureProperties());
+
 	};
 
 
