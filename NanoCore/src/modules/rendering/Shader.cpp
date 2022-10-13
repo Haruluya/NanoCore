@@ -12,11 +12,11 @@ namespace NanoCore{
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:    RA_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		case RendererAPI::API::None:    NANO_ENGINE_LOG_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
 		case RendererAPI::API::OpenGL:  return std::make_shared<OpenGLShader>(filepath);
 		}
 
-		RA_CORE_ASSERT(false, "Unknown RendererAPI!");
+		NANO_ENGINE_LOG_ASSERT(false, "Unknown RendererAPI!");
 		return nullptr;
 	}
 
@@ -24,17 +24,17 @@ namespace NanoCore{
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:    RA_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		case RendererAPI::API::None:    NANO_ENGINE_LOG_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
 		case RendererAPI::API::OpenGL:  return std::make_shared<OpenGLShader>(name, vertexSrc, fragmentSrc);
 		}
 
-		RA_CORE_ASSERT(false, "Unknown RendererAPI!");
+		NANO_ENGINE_LOG_ASSERT(false, "Unknown RendererAPI!");
 		return nullptr;
 	}
 
 	void ShaderLibrary::Add(const std::string& name, const Shared<Shader>& shader)
 	{
-		RA_CORE_ASSERT(!Exists(name), "Shader already exists!");
+		NANO_ENGINE_LOG_ASSERT(!Exists(name), "Shader already exists!");
 		m_Shaders[name] = shader;
 	}
 
@@ -60,7 +60,7 @@ namespace NanoCore{
 
 	NanoCore::Shared<NanoCore::Shader> ShaderLibrary::Get(const std::string& name)
 	{
-		RA_CORE_ASSERT(Exists(name), "Shader not found!");
+		NANO_ENGINE_LOG_ASSERT(Exists(name), "Shader not found!");
 		return m_Shaders[name];
 	}
 

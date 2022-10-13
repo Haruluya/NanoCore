@@ -285,12 +285,12 @@ namespace NanoCore {
 		Buffer buffer;
 
 		std::ifstream stream(filepath, std::ios::binary | std::ios::ate);
-		RA_CORE_ASSERT(stream);
+		NANO_ENGINE_LOG_ASSERT(stream);
 
 		std::streampos end = stream.tellg();
 		stream.seekg(0, std::ios::beg);
 		uint32_t size = end - stream.tellg();
-		RA_CORE_ASSERT(size != 0);
+		NANO_ENGINE_LOG_ASSERT(size != 0);
 
 		buffer.Allocate(size);
 		stream.read((char*)buffer.Data, buffer.Size);

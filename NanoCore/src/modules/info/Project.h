@@ -44,55 +44,55 @@ namespace NanoCore {
 
 		static const std::string& GetProjectName()
 		{
-			RA_CORE_ASSERT(s_ActiveProject);
+			NANO_ENGINE_LOG_ASSERT(s_ActiveProject);
 			return s_ActiveProject->GetConfig().Name;
 		}
 
 		static std::filesystem::path GetProjectDirectory()
 		{
-			RA_CORE_ASSERT(s_ActiveProject);
+			NANO_ENGINE_LOG_ASSERT(s_ActiveProject);
 			return s_ActiveProject->GetConfig().ProjectDirectory;
 		}
 
 		static std::filesystem::path GetAssetDirectory()
 		{
-			RA_CORE_ASSERT(s_ActiveProject);
+			NANO_ENGINE_LOG_ASSERT(s_ActiveProject);
 			return std::filesystem::path(s_ActiveProject->GetConfig().ProjectDirectory) / s_ActiveProject->GetConfig().AssetDirectory;
 		}
 
 		static std::filesystem::path GetAssetRegistryPath()
 		{
-			RA_CORE_ASSERT(s_ActiveProject);
+			NANO_ENGINE_LOG_ASSERT(s_ActiveProject);
 			return std::filesystem::path(s_ActiveProject->GetConfig().ProjectDirectory) / s_ActiveProject->GetConfig().AssetRegistryPath;
 		}
 
 		static std::filesystem::path GetMeshPath()
 		{
-			RA_CORE_ASSERT(s_ActiveProject);
+			NANO_ENGINE_LOG_ASSERT(s_ActiveProject);
 			return std::filesystem::path(s_ActiveProject->GetConfig().ProjectDirectory) / s_ActiveProject->GetConfig().MeshPath;
 		}
 
 		static std::filesystem::path GetAudioCommandsRegistryPath()
 		{
-			RA_CORE_ASSERT(s_ActiveProject);
+			NANO_ENGINE_LOG_ASSERT(s_ActiveProject);
 			return std::filesystem::path(s_ActiveProject->GetConfig().ProjectDirectory) / s_ActiveProject->GetConfig().AudioCommandsRegistryPath;
 		}
 
 		static std::filesystem::path GetScriptModulePath()
 		{
-			RA_CORE_ASSERT(s_ActiveProject);
+			NANO_ENGINE_LOG_ASSERT(s_ActiveProject);
 			return std::filesystem::path(s_ActiveProject->GetConfig().ProjectDirectory) / s_ActiveProject->GetConfig().ScriptModulePath;
 		}
 
 		static std::filesystem::path GetScriptModuleFilePath()
 		{
-			RA_CORE_ASSERT(s_ActiveProject);
+			NANO_ENGINE_LOG_ASSERT(s_ActiveProject);
 			return GetScriptModulePath() / fmt::format("{0}.dll", GetProjectName());
 		}
 
 		static std::filesystem::path GetCacheDirectory()
 		{
-			RA_CORE_ASSERT(s_ActiveProject);
+			NANO_ENGINE_LOG_ASSERT(s_ActiveProject);
 			return std::filesystem::path(s_ActiveProject->GetConfig().ProjectDirectory) / "Cache";
 		}
 	private:

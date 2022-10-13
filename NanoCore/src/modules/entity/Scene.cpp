@@ -28,7 +28,7 @@ namespace NanoCore{
 		case Rigidbody2DComponent::BodyType::Kinematic: return b2_kinematicBody;
 		}
 
-		RA_CORE_ASSERT(false, "Unknown body type");
+		NANO_ENGINE_LOG_ASSERT(false, "Unknown body type");
 		return b2_staticBody;
 	}
 

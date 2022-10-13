@@ -24,7 +24,7 @@ namespace NanoCore{
 		case ShaderDataType::Bool:     return 1;
 		}
 
-		RA_CORE_ASSERT(false, "Unknown ShaderDataType!");
+		NANO_ENGINE_LOG_ASSERT(false, "Unknown ShaderDataType!");
 		return 0;
 	}
 
@@ -60,7 +60,7 @@ namespace NanoCore{
 			case ShaderDataType::Bool:    return 1;
 			}
 
-			RA_CORE_ASSERT(false, "Unknown ShaderDataType!");
+			NANO_ENGINE_LOG_ASSERT(false, "Unknown ShaderDataType!");
 			return 0;
 		}
 	};
@@ -186,7 +186,7 @@ namespace NanoCore{
 
 		byte* ReadBytes(uint32_t size, uint32_t offset)
 		{
-			RA_CORE_ASSERT(offset + size <= Size, "Buffer overflow!");
+			NANO_ENGINE_LOG_ASSERT(offset + size <= Size, "Buffer overflow!");
 			byte* buffer = new byte[size];
 			memcpy(buffer, (byte*)Data + offset, size);
 			return buffer;
@@ -194,7 +194,7 @@ namespace NanoCore{
 
 		void Write(const void* data, uint32_t size, uint32_t offset = 0)
 		{
-			RA_CORE_ASSERT(offset + size <= Size, "Buffer overflow!");
+			NANO_ENGINE_LOG_ASSERT(offset + size <= Size, "Buffer overflow!");
 			memcpy((byte*)Data + offset, data, size);
 		}
 

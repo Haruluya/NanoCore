@@ -17,7 +17,7 @@ namespace NanoCore{
 	{
 		RA_PROFILE_FUNCTION();
 
-		RA_CORE_ASSERT(!s_Instance, "Application already exists!");
+		NANO_ENGINE_LOG_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 
 		// Set working directory here
@@ -25,7 +25,7 @@ namespace NanoCore{
 			std::filesystem::current_path(m_Specification.WorkingDirectory);
 
 		m_Window = Window::Create(WindowProps(m_Specification.Name));
-		m_Window->SetEventCallback(RA_BIND_EVENT_FN(Application::OnEvent));
+		m_Window->SetEventCallback(NANO_EVENT_BIND(Application::OnEvent));
 
 		Renderer::Init();
 
@@ -66,8 +66,8 @@ namespace NanoCore{
 		RA_PROFILE_FUNCTION();
 
 		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<WindowCloseEvent>(RA_BIND_EVENT_FN(Application::OnWindowClose));
-		dispatcher.Dispatch<WindowResizeEvent>(RA_BIND_EVENT_FN(Application::OnWindowResize));
+		dispatcher.Dispatch<WindowCloseEvent>(NANO_EVENT_BIND(Application::OnWindowClose));
+		dispatcher.Dispatch<WindowResizeEvent>(NANO_EVENT_BIND(Application::OnWindowResize));
 
 		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
 		{

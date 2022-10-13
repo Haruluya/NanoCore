@@ -84,7 +84,7 @@ namespace NanoCore{
 			case FramebufferTextureFormat::RED_INTEGER: return GL_RED_INTEGER;
 			}
 
-			RA_CORE_ASSERT(false);
+			NANO_ENGINE_LOG_ASSERT(false);
 			return 0;
 		}
 
@@ -163,7 +163,7 @@ namespace NanoCore{
 
 		if (m_ColorAttachments.size() > 1)
 		{
-			RA_CORE_ASSERT(m_ColorAttachments.size() <= 4);
+			NANO_ENGINE_LOG_ASSERT(m_ColorAttachments.size() <= 4);
 			GLenum buffers[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
 			glDrawBuffers(m_ColorAttachments.size(), buffers);
 		}
@@ -173,7 +173,7 @@ namespace NanoCore{
 			glDrawBuffer(GL_NONE);
 		}
 
-		RA_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
+		NANO_ENGINE_LOG_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
@@ -193,7 +193,7 @@ namespace NanoCore{
 	{
 		if (width == 0 || height == 0 || width > s_MaxFramebufferSize || height > s_MaxFramebufferSize)
 		{
-			RA_CORE_WARN("Attempted to rezize framebuffer to {0}, {1}", width, height);
+			NANO_ENGINE_LOG_WARN("Attempted to rezize framebuffer to {0}, {1}", width, height);
 			return;
 		}
 		m_Specification.Width = width;
@@ -204,7 +204,7 @@ namespace NanoCore{
 
 	int OpenGLFramebuffer::ReadPixel(uint32_t attachmentIndex, int x, int y)
 	{
-		RA_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
+		NANO_ENGINE_LOG_ASSERT(attachmentIndex < m_ColorAttachments.size());
 
 		glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
 		int pixelData;
@@ -215,7 +215,7 @@ namespace NanoCore{
 
 	void OpenGLFramebuffer::ClearAttachment(uint32_t attachmentIndex, int value)
 	{
-		RA_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
+		NANO_ENGINE_LOG_ASSERT(attachmentIndex < m_ColorAttachments.size());
 
 		auto& spec = m_ColorAttachmentSpecifications[attachmentIndex];
 		glClearTexImage(m_ColorAttachments[attachmentIndex], 0,

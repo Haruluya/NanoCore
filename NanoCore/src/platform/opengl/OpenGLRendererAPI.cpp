@@ -16,13 +16,13 @@ namespace NanoCore {
 	{
 		switch (severity)
 		{
-		case GL_DEBUG_SEVERITY_HIGH:         RA_CORE_CRITICAL(message); return;
-		case GL_DEBUG_SEVERITY_MEDIUM:       RA_CORE_ERROR(message); return;
-		case GL_DEBUG_SEVERITY_LOW:          RA_CORE_WARN(message); return;
-		case GL_DEBUG_SEVERITY_NOTIFICATION: RA_CORE_TRACE(message); return;
+		case GL_DEBUG_SEVERITY_HIGH:         NANO_ENGINE_LOG_CRITICAL(message); return;
+		case GL_DEBUG_SEVERITY_MEDIUM:       NANO_ENGINE_LOG_ERROR(message); return;
+		case GL_DEBUG_SEVERITY_LOW:          NANO_ENGINE_LOG_WARN(message); return;
+		case GL_DEBUG_SEVERITY_NOTIFICATION: NANO_ENGINE_LOG_TRANCE(message); return;
 		}
 
-		RA_CORE_ASSERT(false, "Unknown severity level!");
+		NANO_ENGINE_LOG_ASSERT(false, "Unknown severity level!");
 	}
 
 	void OpenGLRendererAPI::Init()

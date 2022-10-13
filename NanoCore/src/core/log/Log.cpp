@@ -18,7 +18,7 @@ namespace NanoCore{
 		s_ClientLogger->set_level(spdlog::level::trace);
 
 
-		RA_CORE_INFO("LOG INIT！！！！！！！！！！！！！！！！！！！！！！");
+		NANO_ENGINE_LOG_INFO("LOG INIT！！！！！！！！！！！！！！！！！！！！！！");
 	}
 
 }

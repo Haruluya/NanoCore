@@ -11,24 +11,24 @@ namespace NanoCore{
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:    RA_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		case RendererAPI::API::None:    NANO_ENGINE_LOG_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
 		case RendererAPI::API::OpenGL:  return std::make_shared<OpenGLVertexBuffer>(size);
 		}
 
-		RA_CORE_ASSERT(false, "Unknown RendererAPI!");
+		NANO_ENGINE_LOG_ASSERT(false, "Unknown RendererAPI!");
 		return nullptr;
 	}
 	Shared<VertexBuffer> VertexBuffer::Create(float* vertices, uint32_t size)
 	{
 		switch (Renderer::GetAPI())
 		{
-		//case RendererAPI::None:    RA_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		//case RendererAPI::None:    NANO_ENGINE_LOG_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
 		//case RendererAPI::OpenGL:  return new OpenGLVertexBuffer(vertices, size);
-		case RendererAPI::API::None:    RA_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		case RendererAPI::API::None:    NANO_ENGINE_LOG_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
 		case RendererAPI::API::OpenGL:  return std::make_shared<OpenGLVertexBuffer>(vertices, size);
 		}
 
-		RA_CORE_ASSERT(false, "Unknown RendererAPI!");
+		NANO_ENGINE_LOG_ASSERT(false, "Unknown RendererAPI!");
 		return nullptr;
 	}
 
@@ -36,13 +36,13 @@ namespace NanoCore{
 	{
 		switch (Renderer::GetAPI())
 		{
-		//case RendererAPI::None:    RA_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		//case RendererAPI::None:    NANO_ENGINE_LOG_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
 		//case RendererAPI::OpenGL:  return new OpenGLIndexBuffer(indices, size);
-		case RendererAPI::API::None:    RA_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		case RendererAPI::API::None:    NANO_ENGINE_LOG_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
 		case RendererAPI::API::OpenGL:  return std::make_shared<OpenGLIndexBuffer>(indices, size);
 		}
 
-		RA_CORE_ASSERT(false, "Unknown RendererAPI!");
+		NANO_ENGINE_LOG_ASSERT(false, "Unknown RendererAPI!");
 		return nullptr;
 	}
 

@@ -118,7 +118,7 @@ namespace NanoCore{
 		case Rigidbody2DComponent::BodyType::Kinematic: return "Kinematic";
 		}
 
-		RA_CORE_ASSERT(false, "Unknown body type");
+		NANO_ENGINE_LOG_ASSERT(false, "Unknown body type");
 		return {};
 	}
 
@@ -128,7 +128,7 @@ namespace NanoCore{
 		if (bodyTypeString == "Dynamic")   return Rigidbody2DComponent::BodyType::Dynamic;
 		if (bodyTypeString == "Kinematic") return Rigidbody2DComponent::BodyType::Kinematic;
 
-		RA_CORE_ASSERT(false, "Unknown body type");
+		NANO_ENGINE_LOG_ASSERT(false, "Unknown body type");
 		return Rigidbody2DComponent::BodyType::Static;
 	}
 
@@ -139,7 +139,7 @@ namespace NanoCore{
 
 	static void SerializeEntity(YAML::Emitter& out, Entity entity)
 	{
-		RA_CORE_ASSERT(entity.HasComponent<IDComponent>());
+		NANO_ENGINE_LOG_ASSERT(entity.HasComponent<IDComponent>());
 
 		out << YAML::BeginMap; // Entity
 		out << YAML::Key << "Entity" << YAML::Value << entity.GetUUID();
@@ -292,7 +292,7 @@ namespace NanoCore{
 	void SceneSerializer::SerializeRuntime(const std::string& filepath)
 	{
 		// Not implemented
-		RA_CORE_ASSERT(false);
+		NANO_ENGINE_LOG_ASSERT(false);
 	}
 
 	bool SceneSerializer::Deserialize(const std::string& filepath)
@@ -304,7 +304,7 @@ namespace NanoCore{
 		}
 		catch (YAML::ParserException e)
 		{
-			RA_CORE_ERROR("Failed to load .nanocore file '{0}'\n     {1}", filepath, e.what());
+			NANO_ENGINE_LOG_ERROR("Failed to load .nanocore file '{0}'\n     {1}", filepath, e.what());
 			return false;
 		}
 
@@ -312,7 +312,7 @@ namespace NanoCore{
 			return false;
 
 		std::string sceneName = data["Scene"].as<std::string>();
-		RA_CORE_TRACE("Deserializing scene '{0}'", sceneName);
+		NANO_ENGINE_LOG_TRANCE("Deserializing scene '{0}'", sceneName);
 
 		auto entities = data["Entities"];
 		if (entities)
@@ -326,7 +326,7 @@ namespace NanoCore{
 				if (tagComponent)
 					name = tagComponent["Tag"].as<std::string>();
 
-				RA_CORE_TRACE("Deserialized entity with ID = {0}, name = {1}", uuid, name);
+				NANO_ENGINE_LOG_TRANCE("Deserialized entity with ID = {0}, name = {1}", uuid, name);
 
 				Entity deserializedEntity = m_Scene->CreateEntityWithUUID(uuid, name);
 
@@ -414,14 +414,14 @@ namespace NanoCore{
 				}
 			}
 		}
-		RA_CORE_INFO("Deserialize success!");
+		NANO_ENGINE_LOG_INFO("Deserialize success!");
 		return true;
 	}
 
 	bool SceneSerializer::DeserializeRuntime(const std::string& filepath)
 	{
 		// Not implemented
-		RA_CORE_ASSERT(false);
+		NANO_ENGINE_LOG_ASSERT(false);
 		return false;
 	}
 

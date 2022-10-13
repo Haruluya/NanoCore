@@ -22,7 +22,7 @@ namespace NanoCore{
 		case ShaderDataType::Bool:     return GL_BOOL;
 		}
 
-		RA_CORE_ASSERT(false, "Unknown ShaderDataType!");
+		NANO_ENGINE_LOG_ASSERT(false, "Unknown ShaderDataType!");
 		return 0;
 	}
 
@@ -58,7 +58,7 @@ namespace NanoCore{
 	{
 		RA_PROFILE_FUNCTION();
 
-		RA_CORE_ASSERT(vertexBuffer->GetLayout().GetElements().size(), "Vertex Buffer has no layout!");
+		NANO_ENGINE_LOG_ASSERT(vertexBuffer->GetLayout().GetElements().size(), "Vertex Buffer has no layout!");
 
 		glBindVertexArray(m_RendererID);
 		vertexBuffer->Bind();
@@ -117,7 +117,7 @@ namespace NanoCore{
 				break;
 			}
 			default:
-				RA_CORE_ASSERT(false, "Unknown ShaderDataType!");
+				NANO_ENGINE_LOG_ASSERT(false, "Unknown ShaderDataType!");
 			}
 		}
 

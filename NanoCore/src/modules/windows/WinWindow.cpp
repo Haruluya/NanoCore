@@ -19,7 +19,7 @@ namespace NanoCore{
 
 	static void GLFWErrorCallback(int error, const char* description)
 	{
-		RA_CORE_ERROR("GLFW Error ({0}): {1}", error, description);
+		NANO_ENGINE_LOG_ERROR("GLFW Error ({0}): {1}", error, description);
 	}
 
 	WindowsWindow::WindowsWindow(const WindowProps& props)
@@ -44,13 +44,13 @@ namespace NanoCore{
 		m_Data.Width = props.Width;
 		m_Data.Height = props.Height;
 
-		RA_CORE_INFO("Creating window {0} {1}, {2}", props.Title.c_str(), props.Width, props.Height);
+		NANO_ENGINE_LOG_INFO("Creating window {0} {1}, {2}", props.Title.c_str(), props.Width, props.Height);
 
 		if (s_GLFWWindowCount == 0)
 		{
 			RA_PROFILE_SCOPE("glfwInit");
 			int success = glfwInit();
-			RA_CORE_ASSERT(success, "Could not initialize GLFW!");
+			NANO_ENGINE_LOG_ASSERT(success, "Could not initialize GLFW!");
 			glfwSetErrorCallback(GLFWErrorCallback);
 		}
 
@@ -73,7 +73,7 @@ namespace NanoCore{
 			glfwSetWindowIcon(m_Window, 1, icon);
 		}
 		else {
-			RA_CORE_ERROR("Icon not found!");
+			NANO_ENGINE_LOG_ERROR("Icon not found!");
 		}
 
 

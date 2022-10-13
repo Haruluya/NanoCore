@@ -23,7 +23,7 @@ namespace NanoCore {
 			if (type == "fragment" || type == "pixel")
 				return GL_FRAGMENT_SHADER;
 
-			RA_CORE_ASSERT(false, "Unknown shader type!");
+			NANO_ENGINE_LOG_ASSERT(false, "Unknown shader type!");
 			return 0;
 		}
 
@@ -34,7 +34,7 @@ namespace NanoCore {
 			case GL_VERTEX_SHADER:   return shaderc_glsl_vertex_shader;
 			case GL_FRAGMENT_SHADER: return shaderc_glsl_fragment_shader;
 			}
-			RA_CORE_ASSERT(false);
+			NANO_ENGINE_LOG_ASSERT(false);
 			return (shaderc_shader_kind)0;
 		}
 
@@ -45,7 +45,7 @@ namespace NanoCore {
 			case GL_VERTEX_SHADER:   return "GL_VERTEX_SHADER";
 			case GL_FRAGMENT_SHADER: return "GL_FRAGMENT_SHADER";
 			}
-			RA_CORE_ASSERT(false);
+			NANO_ENGINE_LOG_ASSERT(false);
 			return nullptr;
 		}
 
@@ -69,7 +69,7 @@ namespace NanoCore {
 			case GL_VERTEX_SHADER:    return ".cached_opengl.vert";
 			case GL_FRAGMENT_SHADER:  return ".cached_opengl.frag";
 			}
-			RA_CORE_ASSERT(false);
+			NANO_ENGINE_LOG_ASSERT(false);
 			return "";
 		}
 
@@ -80,7 +80,7 @@ namespace NanoCore {
 			case GL_VERTEX_SHADER:    return ".cached_vulkan.vert";
 			case GL_FRAGMENT_SHADER:  return ".cached_vulkan.frag";
 			}
-			RA_CORE_ASSERT(false);
+			NANO_ENGINE_LOG_ASSERT(false);
 			return "";
 		}
 
@@ -112,7 +112,7 @@ namespace NanoCore {
 				CompileOrGetOpenGLBinaries();
 				CreateProgram();
 			}
-			RA_CORE_WARN("Shader creation took {0} ms", timer.ElapsedMillis());
+			NANO_ENGINE_LOG_WARN("Shader creation took {0} ms", timer.ElapsedMillis());
 		}
 
 		// Extract name from filepath
@@ -167,12 +167,12 @@ namespace NanoCore {
 			}
 			else
 			{
-				RA_CORE_ERROR("Could not read from file '{0}'", filepath);
+				NANO_ENGINE_LOG_ERROR("Could not read from file '{0}'", filepath);
 			}
 		}
 		else
 		{
-			RA_CORE_ERROR("Could not open file '{0}'", filepath);
+			NANO_ENGINE_LOG_ERROR("Could not open file '{0}'", filepath);
 		}
 
 		return result;
@@ -190,13 +190,13 @@ namespace NanoCore {
 		while (pos != std::string::npos)
 		{
 			size_t eol = source.find_first_of("\r\n", pos); //End of shader type declaration line
-			RA_CORE_ASSERT(eol != std::string::npos, "Syntax error");
+			NANO_ENGINE_LOG_ASSERT(eol != std::string::npos, "Syntax error");
 			size_t begin = pos + typeTokenLength + 1; //Start of shader type name (after "#type " keyword)
 			std::string type = source.substr(begin, eol - begin);
-			RA_CORE_ASSERT(Utils::ShaderTypeFromString(type), "Invalid shader type specified");
+			NANO_ENGINE_LOG_ASSERT(Utils::ShaderTypeFromString(type), "Invalid shader type specified");
 
 			size_t nextLinePos = source.find_first_not_of("\r\n", eol); //Start of shader code after shader type declaration line
-			RA_CORE_ASSERT(nextLinePos != std::string::npos, "Syntax error");
+			NANO_ENGINE_LOG_ASSERT(nextLinePos != std::string::npos, "Syntax error");
 			pos = source.find(typeToken, nextLinePos); //Start of next shader type declaration line
 
 			shaderSources[Utils::ShaderTypeFromString(type)] = (pos == std::string::npos) ? source.substr(nextLinePos) : source.substr(nextLinePos, pos - nextLinePos);
@@ -241,8 +241,8 @@ namespace NanoCore {
 				shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_FilePath.c_str(), options);
 				if (module.GetCompilationStatus() != shaderc_compilation_status_success)
 				{
-					RA_CORE_ERROR(module.GetErrorMessage());
-					RA_CORE_ASSERT(false);
+					NANO_ENGINE_LOG_ERROR(module.GetErrorMessage());
+					NANO_ENGINE_LOG_ASSERT(false);
 				}
 
 				shaderData[stage] = std::vector<uint32_t>(module.cbegin(), module.cend());
@@ -302,8 +302,8 @@ namespace NanoCore {
 				shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_FilePath.c_str());
 				if (module.GetCompilationStatus() != shaderc_compilation_status_success)
 				{
-					RA_CORE_ERROR(module.GetErrorMessage());
-					RA_CORE_ASSERT(false);
+					NANO_ENGINE_LOG_ERROR(module.GetErrorMessage());
+					NANO_ENGINE_LOG_ASSERT(false);
 				}
 
 				shaderData[stage] = std::vector<uint32_t>(module.cbegin(), module.cend());
@@ -344,7 +344,7 @@ namespace NanoCore {
 
 			std::vector<GLchar> infoLog(maxLength);
 			glGetProgramInfoLog(program, maxLength, &maxLength, infoLog.data());
-			RA_CORE_ERROR("Shader linking failed ({0}):\n{1}", m_FilePath, infoLog.data());
+			NANO_ENGINE_LOG_ERROR("Shader linking failed ({0}):\n{1}", m_FilePath, infoLog.data());
 
 			glDeleteProgram(program);
 
@@ -375,8 +375,8 @@ namespace NanoCore {
 
 			glDeleteProgram(program);
 
-			RA_CORE_ERROR("{0}", infoLog.data());
-			RA_CORE_ASSERT(false, "[OpenGL] Shader link failure!");
+			NANO_ENGINE_LOG_ERROR("{0}", infoLog.data());
+			NANO_ENGINE_LOG_ASSERT(false, "[OpenGL] Shader link failure!");
 			return false;
 		}
 		return true;
@@ -420,7 +420,7 @@ namespace NanoCore {
 				// Save program data
 				GLint formats = 0;
 				glGetIntegerv(GL_NUM_PROGRAM_BINARY_FORMATS, &formats);
-				RA_CORE_ASSERT(formats > 0, "Driver does not support binary format");
+				NANO_ENGINE_LOG_ASSERT(formats > 0, "Driver does not support binary format");
 				Utils::CreateCacheDirectoryIfNeeded();
 				GLint length = 0;
 				glGetProgramiv(program, GL_PROGRAM_BINARY_LENGTH, &length);
@@ -473,8 +473,8 @@ namespace NanoCore {
 
 				glDeleteShader(shader);
 
-				RA_CORE_ERROR("{0}", infoLog.data());
-				RA_CORE_ASSERT(false, "[OpenGL] Shader compilation failure!");
+				NANO_ENGINE_LOG_ERROR("{0}", infoLog.data());
+				NANO_ENGINE_LOG_ASSERT(false, "[OpenGL] Shader compilation failure!");
 				return;
 			}
 			glAttachShader(program, shader);
@@ -487,11 +487,11 @@ namespace NanoCore {
 		spirv_cross::Compiler compiler(shaderData);
 		spirv_cross::ShaderResources resources = compiler.get_shader_resources();
 
-		RA_CORE_TRACE("OpenGLShader::Reflect - {0} {1}", Utils::GLShaderStageToString(stage), m_FilePath);
-		RA_CORE_TRACE("    {0} uniform buffers", resources.uniform_buffers.size());
-		RA_CORE_TRACE("    {0} resources", resources.sampled_images.size());
+		NANO_ENGINE_LOG_TRANCE("OpenGLShader::Reflect - {0} {1}", Utils::GLShaderStageToString(stage), m_FilePath);
+		NANO_ENGINE_LOG_TRANCE("    {0} uniform buffers", resources.uniform_buffers.size());
+		NANO_ENGINE_LOG_TRANCE("    {0} resources", resources.sampled_images.size());
 
-		RA_CORE_TRACE("Uniform buffers:");
+		NANO_ENGINE_LOG_TRANCE("Uniform buffers:");
 		for (const auto& resource : resources.uniform_buffers)
 		{
 			const auto& bufferType = compiler.get_type(resource.base_type_id);
@@ -499,10 +499,10 @@ namespace NanoCore {
 			uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
 			int memberCount = bufferType.member_types.size();
 
-			RA_CORE_TRACE("  {0}", resource.name);
-			RA_CORE_TRACE("    Size = {0}", bufferSize);
-			RA_CORE_TRACE("    Binding = {0}", binding);
-			RA_CORE_TRACE("    Members = {0}", memberCount);
+			NANO_ENGINE_LOG_TRANCE("  {0}", resource.name);
+			NANO_ENGINE_LOG_TRANCE("    Size = {0}", bufferSize);
+			NANO_ENGINE_LOG_TRANCE("    Binding = {0}", binding);
+			NANO_ENGINE_LOG_TRANCE("    Members = {0}", memberCount);
 		}
 	}
 

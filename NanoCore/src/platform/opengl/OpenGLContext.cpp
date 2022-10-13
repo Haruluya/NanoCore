@@ -10,7 +10,7 @@ namespace NanoCore{
 	OpenGLContext::OpenGLContext(GLFWwindow* windowHandle)
 		: m_WindowHandle(windowHandle)
 	{
-		RA_CORE_ASSERT(windowHandle, "Window handle is null!")
+		NANO_ENGINE_LOG_ASSERT(windowHandle, "Window handle is null!")
 	}
 
 	void OpenGLContext::Init()
@@ -18,8 +18,8 @@ namespace NanoCore{
 		RA_PROFILE_FUNCTION();
 		glfwMakeContextCurrent(m_WindowHandle);
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-		RA_CORE_ASSERT(status, "Failed to initialize Glad!");
-		RA_CORE_INFO("Initialize opengl success!");
+		NANO_ENGINE_LOG_ASSERT(status, "Failed to initialize Glad!");
+		NANO_ENGINE_LOG_INFO("Initialize opengl success!");
 
 	}
 
