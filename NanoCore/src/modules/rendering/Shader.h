@@ -7,7 +7,7 @@
 // The abstraction of shader.
 namespace NanoCore{
 
-	class Shader
+	class Shader : public RefCount
 	{
 	public:
 		virtual ~Shader() = default;

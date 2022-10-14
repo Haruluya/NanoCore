@@ -100,7 +100,7 @@ namespace NanoCore{
 		uint32_t m_Stride = 0;
 	};
 
-	class VertexBuffer
+	class VertexBuffer : public RefCount
 	{
 	public:
 		virtual ~VertexBuffer() = default;
@@ -117,7 +117,7 @@ namespace NanoCore{
 		static Shared<VertexBuffer> Create(float* vertices, uint32_t size);
 	};
 
-	class IndexBuffer
+	class IndexBuffer : public RefCount
 	{
 	public:
 		virtual ~IndexBuffer() = default;

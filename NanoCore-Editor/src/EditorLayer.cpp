@@ -45,7 +45,7 @@ namespace NanoCore {
 		fbSpec.Height = 720;
 		m_Framebuffer = Framebuffer::Create(fbSpec);
 
-		m_EditorScene = std::make_shared<Scene>();
+		m_EditorScene = Shared<Scene>::Create();
 		m_ActiveScene = m_EditorScene;
 
 		auto commandLineArgs = Application::Get().GetSpecification().CommandLineArgs;
@@ -129,7 +129,7 @@ namespace NanoCore {
 		if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
 		{
 			int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
-			m_HoveredEntity = pixelData == -1 ? Entity() : Entity((entt::entity)pixelData, m_ActiveScene.get());
+			m_HoveredEntity = pixelData == -1 ? Entity() : Entity((entt::entity)pixelData, m_ActiveScene.Raw());
 		}
 
 		OnOverlayRender();
@@ -698,7 +698,7 @@ namespace NanoCore {
 
 	void EditorLayer::NewScene()
 	{
-		m_ActiveScene = std::make_shared<Scene>();
+		m_ActiveScene = Shared<Scene>::Create();
 		m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		m_HierarchyPanel.SetContext(m_ActiveScene);
 
@@ -722,7 +722,7 @@ namespace NanoCore {
 			return;
 		}
 
-		Shared<Scene> newScene = std::make_shared<Scene>();
+		Shared<Scene> newScene = Shared<Scene>::Create();
 		SceneSerializer serializer(newScene);
 		if (serializer.Deserialize(path.string()))
 		{

@@ -81,7 +81,7 @@ namespace NanoCore{
 
 	Shared<Scene> Scene::Copy(Shared<Scene> other)
 	{
-		Shared<Scene> newScene = std::make_shared<Scene>();
+		Shared<Scene> newScene = Shared<Scene>::Create();
 
 		newScene->m_ViewportWidth = other->m_ViewportWidth;
 		newScene->m_ViewportHeight = other->m_ViewportHeight;

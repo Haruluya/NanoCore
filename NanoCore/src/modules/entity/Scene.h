@@ -12,7 +12,7 @@ namespace NanoCore{
 
 	class Entity;
 
-	class Scene
+	class Scene : public RefCount
 	{
 	public:
 		Scene();

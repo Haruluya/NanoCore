@@ -5,7 +5,7 @@
 
 namespace NanoCore{
 
-	class VertexArray
+	class VertexArray : public RefCount
 	{
 	public:
 		virtual ~VertexArray() = default;

@@ -72,7 +72,7 @@ namespace NanoCore{
 		bool Storage = false;
 	};
 
-	class Texture
+	class Texture :public RefCount
 	{
 	public:
 		virtual ~Texture() = default;

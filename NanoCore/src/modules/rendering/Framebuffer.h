@@ -47,7 +47,7 @@ namespace NanoCore{
 		bool SwapChainTarget = false;
 	};
 
-	class Framebuffer
+	class Framebuffer : public RefCount
 	{
 	public:
 		virtual ~Framebuffer() = default;

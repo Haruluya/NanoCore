@@ -40,7 +40,7 @@ namespace NanoCore {
 		{
 			m_Context->m_Registry.each([&](auto entityID)
 				{
-					Entity entity{ entityID , m_Context.get() };
+					Entity entity{ entityID , m_Context.Raw() };
 					DrawEntityNode(entity);
 				});
 

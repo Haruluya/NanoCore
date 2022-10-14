@@ -4,7 +4,7 @@
 
 namespace NanoCore{
 
-	class UniformBuffer
+	class UniformBuffer : public RefCount
 	{
 	public:
 		virtual ~UniformBuffer() {}
