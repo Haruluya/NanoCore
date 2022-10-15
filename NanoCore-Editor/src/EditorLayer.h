@@ -3,6 +3,9 @@
 #include "NanoCore.h"
 #include "components/HierarchyPanel.h"
 #include "components/ContentPanel.h"
+#include "components/SysStatusPanel.h"
+#include "components/ViewportPanel.h"
+#include "components/GlobalSettingPanel.h"
 
 #include "modules/entity/EditorCamera.h"
 
@@ -11,7 +14,7 @@ namespace NanoCore {
 	{
 		THEME_BLUE, THEME_DARK, THEME_GRAY, THEME_LIGHT
 	};
-	class EditorLayer : public Layer
+	class EditorLayer : public Layer, RefCount
 	{
 	public:
 		EditorLayer();
@@ -23,6 +26,8 @@ namespace NanoCore {
 		void OnUpdate(Timestep ts) override;
 		virtual void OnImGuiRender() override;
 		void OnEvent(Event& e) override;
+		void OpenScene();
+		void OpenScene(const std::filesystem::path& path);
 	private:
 		bool OnKeyPressed(KeyPressedEvent& e);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
@@ -30,8 +35,7 @@ namespace NanoCore {
 		void OnOverlayRender();
 
 		void NewScene();
-		void OpenScene();
-		void OpenScene(const std::filesystem::path& path);
+
 		void SaveScene();
 		void SaveSceneAs();
 
@@ -52,7 +56,7 @@ namespace NanoCore {
 		// UI Panels
 		void UI_Toolbar();
 	private:
-		ThemeColor m_ThemeColor = THEME_BLUE;
+		ThemeColor m_ThemeColor = THEME_DARK;
 
 		NanoCore::OrthographicCameraController m_CameraController;
 
@@ -68,7 +72,7 @@ namespace NanoCore {
 		Entity m_CameraEntity;
 		Entity m_SecondCamera;
 
-		Entity m_HoveredEntity;
+
 
 		bool m_PrimaryCamera = true;
 
@@ -76,9 +80,13 @@ namespace NanoCore {
 
 		Shared<Texture2D> m_CheckerboardTexture;
 
-		bool m_ViewportFocused = false, m_ViewportHovered = false;
 		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
 		glm::vec2 m_ViewportBounds[2];
+		bool m_ViewportFocused = false, m_ViewportHovered = false;
+
+		bool m_StartedRightClickInViewport = false;
+
+
 
 
 
@@ -97,6 +105,9 @@ namespace NanoCore {
 		// Panels
 		HierarchyPanel m_HierarchyPanel;
 		ContentPanel m_ContentPanel;
+		ViewportPanel m_ViewportPanel;
+		SysStatusPanel m_SysStatusPanel;
+		GlobalSettingPanel m_GlobalSettingPanel;
 
 		// Editor resources
 		Shared<Texture2D> m_IconPlay, m_IconSimulate, m_IconStop;
@@ -104,6 +115,12 @@ namespace NanoCore {
 
 		bool m_show_style_setting = false;
 		bool m_TitleBarHovered = false;
+
+
+	private:
+		friend class ViewportPanel;
+		friend class HierarchyPanel;
+		friend class ContentPanel;
 	};
 
 }

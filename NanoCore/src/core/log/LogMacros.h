@@ -1,3 +1,4 @@
+#pragma once
 // Core log macros
 #define NANO_ENGINE_LOG_TRANCE(...)    ::NanoCore::Log::GetCoreLogger()->trace(__VA_ARGS__)
 #define NANO_ENGINE_LOG_INFO(...)     ::NanoCore::Log::GetCoreLogger()->info(__VA_ARGS__)

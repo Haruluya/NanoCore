@@ -58,7 +58,8 @@ namespace NanoCore{
 			RA_PROFILE_SCOPE("glfwCreateWindow");
 			if (Renderer::GetAPI() == RendererAPI::API::OpenGL)
 				glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
-			glfwWindowHint(GLFW_DECORATED, false);
+			//glfwWindowHint(GLFW_DECORATED, false);
+			glfwWindowHint(GLFW_TITLEBAR, false);
 			m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 			++s_GLFWWindowCount;
 		}

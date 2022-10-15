@@ -10,9 +10,12 @@
 
 #include "ImGuizmo/ImGuizmo.h"
 #include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 
-#include "components/ContentPanel.h"
+#include "utils/ResourcesLoadFactory.hpp"
+
+
 
 namespace NanoCore {
 
@@ -26,7 +29,7 @@ namespace NanoCore {
 	extern const std::filesystem::path g_AssetPath;
 
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_CameraController(1280.0f / 720.0f), m_SquareColor({ 0.2f, 0.3f, 0.8f, 1.0f })
+		: Layer("EditorLayer"), m_CameraController(1280.0f / 720.0f), m_SquareColor({ 0.2f, 0.3f, 0.8f, 1.0f }), m_ViewportPanel(this)
 	{
 	}
 
@@ -141,186 +144,76 @@ namespace NanoCore {
 	{
 		RA_PROFILE_FUNCTION();
 
+		/*
+			Set main layout.
+		*/
+		ImGuiIO& io = ImGui::GetIO();
+		ImGuiStyle& style = ImGui::GetStyle();
+		auto boldFont = io.Fonts->Fonts[0];
+		auto largeFont = io.Fonts->Fonts[1];
 
-		// Note: Switch this to true to enable dockspace
-		static bool dockspaceOpen = true;
-		static bool opt_fullscreen_persistant = true;
-		bool opt_fullscreen = opt_fullscreen_persistant;
-		static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
+		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) || (ImGui::IsMouseClicked(ImGuiMouseButton_Right) && !m_StartedRightClickInViewport))
+		{
+			if (m_SceneState != SceneState::Play)
+			{
+				ImGui::FocusWindow(GImGui->HoveredWindow);
+			}
+		}
+
+		io.ConfigWindowsResizeFromEdges = io.BackendFlags & ImGuiBackendFlags_HasMouseCursors;
 
 		// We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
 		// because it would be confusing to have two docking targets within each others.
-		ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
-		if (opt_fullscreen)
-		{
-			ImGuiViewport* viewport = ImGui::GetMainViewport();
-			ImGui::SetNextWindowPos(viewport->Pos);
-			ImGui::SetNextWindowSize(viewport->Size);
-			ImGui::SetNextWindowViewport(viewport->ID);
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-			window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-			window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-		}
+		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking;
 
-		// When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background and handle the pass-thru hole, so we ask Begin() to not render a background.
-		if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
-			window_flags |= ImGuiWindowFlags_NoBackground;
+		ImGuiViewport* viewport = ImGui::GetMainViewport();
+		ImGui::SetNextWindowPos(viewport->Pos);
+		ImGui::SetNextWindowSize(viewport->Size);
+		ImGui::SetNextWindowViewport(viewport->ID);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+		window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
-		// Important: note that we proceed even if Begin() returns false (aka window is collapsed).
-		// This is because we want to keep our DockSpace() active. If a DockSpace() is inactive, 
-		// all active windows docked into it will lose their parent and become undocked.
-		// We cannot preserve the docking relationship between an active window and an inactive docking, otherwise 
-		// any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+		auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		bool isMaximized = (bool)glfwGetWindowAttrib(window, GLFW_MAXIMIZED);
 
-		if (ImGui::Begin("DockSpace Demo", &dockspaceOpen, window_flags)) {
-			ImGui::PopStyleVar();
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, isMaximized ? ImVec2(6.0f, 6.0f) : ImVec2(1.0f, 1.0f));
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 3.0f);
+		ImGui::PushStyleColor(ImGuiCol_MenuBarBg, ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f });
+		ImGui::Begin("DockSpace Demo", nullptr, window_flags);
+		ImGui::PopStyleColor(); // MenuBarBg
+		ImGui::PopStyleVar(2);
 
-
-			if (opt_fullscreen)
-				ImGui::PopStyleVar(2);
-
-			// DockSpace
-			ImGuiIO& io = ImGui::GetIO();
-			ImGuiStyle& style = ImGui::GetStyle();
-			float minWinSizeX = style.WindowMinSize.x;
-			style.WindowMinSize.x = 370.0f;
-			if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
-			{
-				ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
-				ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
-			}
-
-			style.WindowMinSize.x = minWinSizeX;
-
-			UIMainMenu();
-			StyleSetting();
-
-			UITitlebar();
+		ImGui::PopStyleVar(2);
 
 
 
-			m_HierarchyPanel.OnImGuiRender();
-			m_ContentPanel.OnImGuiRender();
+		/*
+			Set style configuration.
+		*/
+		StyleSetting();
 
 
+		/*
+			Set title bar.
+		*/
+		UITitlebar();
 
 
-			if (ImGui::Begin("Stats")) {
-				std::string name = "None";
-				if (m_HoveredEntity)
-					name = m_HoveredEntity.GetComponent<TagComponent>().Tag;
-				ImGui::Text("Hovered Entity: %s", name.c_str());
+		/*
+			Set panels.
+		*/
+		m_HierarchyPanel.OnImGuiRender();
+		m_ContentPanel.OnImGuiRender();
+		m_ViewportPanel.OnImGuiRender();
+		m_SysStatusPanel.OnImGuiRender();
+		m_GlobalSettingPanel.OnImGuiRender();
 
-				auto stats = RenderUtils::GetStats();
-				ImGui::Text("RenderUtils Stats:");
-				ImGui::Text("Draw Calls: %d", stats.DrawCalls);
-				ImGui::Text("Quads: %d", stats.QuadCount);
-				ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
-				ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
-
-				ImGui::End();
-			}
-
-
-
-			if (ImGui::Begin("Settings")) {
-				ImGui::Checkbox("Show physics colliders", &m_ShowPhysicsColliders);
-				ImGui::End();
-			}
-
-
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
-
-
-			ImGuiWindowFlags viewport_window_flags = 0;
-			viewport_window_flags |= ImGuiWindowFlags_NoCollapse;
-			if (ImGui::Begin("Viewport", NULL, viewport_window_flags)) {
-				auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
-				auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
-				auto viewportOffset = ImGui::GetWindowPos();
-				m_ViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
-				m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
-
-				m_ViewportFocused = ImGui::IsWindowFocused();
-				m_ViewportHovered = ImGui::IsWindowHovered();
-				Application::Get().GetUILayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
-
-				ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-				m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
-
-				uint64_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
-				ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
-
-				if (ImGui::BeginDragDropTarget())
-				{
-					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
-					{
-						const wchar_t* path = (const wchar_t*)payload->Data;
-						OpenScene(std::filesystem::path(g_AssetPath) / path);
-					}
-					ImGui::EndDragDropTarget();
-				}
-
-				// Gizmos
-				Entity selectedEntity = m_HierarchyPanel.GetSelectedEntity();
-				if (selectedEntity && m_GizmoType != -1)
-				{
-					ImGuizmo::SetOrthographic(false);
-					ImGuizmo::SetDrawlist();
-
-					ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y, m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y);
-
-					// Camera
-
-					// Runtime camera from entity
-					// auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
-					// const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
-					// const glm::mat4& cameraProjection = camera.GetProjection();
-					// glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
-
-					// Editor camera
-					const glm::mat4& cameraProjection = m_EditorCamera.GetProjection();
-					glm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
-
-					// Entity transform
-					auto& tc = selectedEntity.GetComponent<TransformComponent>();
-					glm::mat4 transform = tc.GetTransform();
-
-					// Snapping
-					bool snap = Input::IsKeyPressed(Key::LeftControl);
-					float snapValue = 0.5f; // Snap to 0.5m for translation/scale
-					// Snap to 45 degrees for rotation
-					if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
-						snapValue = 45.0f;
-
-					float snapValues[3] = { snapValue, snapValue, snapValue };
-
-					ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
-						(ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform),
-						nullptr, snap ? snapValues : nullptr);
-
-					if (ImGuizmo::IsUsing())
-					{
-						glm::vec3 translation, rotation, scale;
-						Math::DecomposeTransform(transform, translation, rotation, scale);
-
-						glm::vec3 deltaRotation = rotation - tc.Rotation;
-						tc.Translation = translation;
-						tc.Rotation += deltaRotation;
-						tc.Scale = scale;
-					}
-				}
-
-
-				ImGui::End();
-			}
-
-			ImGui::PopStyleVar();
-
-			UI_Toolbar();
-		}
+		/*
+			Set tool bar.
+		*/
+		UI_Toolbar();
 
 
 		ImGui::End();
@@ -374,6 +267,8 @@ namespace NanoCore {
 	}
 
 	void EditorLayer::UITitlebar() {
+
+
 		//const float titlebarHeight = 57.0f;
 		//const ImVec2 windowPadding = ImGui::GetCurrentWindowRead()->WindowPadding;
 
@@ -394,7 +289,7 @@ namespace NanoCore {
 		//		drawList->AddImage((ImTextureID)logo_texture, logoRectStart, logoRectMax);
 		//	}
 		//	else {
-		//		RA_CORE_ERROR("Logo not found!");
+		//		NANO_ENGINE_LOG_ERROR("Logo not found!");
 		//	}
 		//}
 		//ImGui::BeginHorizontal("Titlebar", { ImGui::GetWindowWidth() - windowPadding.y * 2.0f, ImGui::GetFrameHeightWithSpacing() });
@@ -482,7 +377,7 @@ namespace NanoCore {
 		//	drawList->AddRect({ 1466.4f ,-124.0f }, {1577.4f,32.0f}, ImGui::ColorConvertFloat4ToU32(ImGui::GetStyleColorVec4(ImGuiCol_Border)), 3, 0, 1);
 		//}
 
-		////ImGui::EndHorizontal();
+		//ImGui::EndHorizontal();
 
 	}
 

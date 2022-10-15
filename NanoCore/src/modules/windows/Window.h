@@ -14,8 +14,8 @@ namespace NanoCore{
 		uint32_t Height;
 
 		WindowProps(const std::string& title = "NanoCore",
-			uint32_t width = 1980,
-			uint32_t height = 1080)
+			uint32_t width = 1080,
+			uint32_t height = 720)
 			: Title(title), Width(width), Height(height)
 		{
 		}
