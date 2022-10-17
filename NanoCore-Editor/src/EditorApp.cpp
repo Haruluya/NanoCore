@@ -6,6 +6,9 @@
 
 namespace NanoCore {
 
+	
+
+
 	class EditorApp : public Application
 	{
 	public:

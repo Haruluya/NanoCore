@@ -23,16 +23,16 @@ namespace NanoCore {
 
 	HierarchyPanel::HierarchyPanel(const Shared<Scene>& context)
 	{
-		SetContext(context);
+		SetScene(context);
 	}
 
-	void HierarchyPanel::SetContext(const Shared<Scene>& context)
+	void HierarchyPanel::SetScene(const Shared<Scene>& context)
 	{
 		m_Context = context;
 		m_SelectionContext = {};
 	}
 
-	void HierarchyPanel::OnImGuiRender()
+	void HierarchyPanel::OnUIRender(bool& isOpen)
 	{
 		ImGui::Begin("Hierarchy");
 

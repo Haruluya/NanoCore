@@ -11,7 +11,7 @@ namespace NanoCore {
 		std::string AssetDirectory;
 		std::string AssetRegistryPath;
 
-		std::string AudioCommandsRegistryPath = "Assets/AudioCommandsRegistry.RAr";
+		std::string AudioCommandsRegistryPath = "";
 
 		std::string MeshPath;
 		std::string MeshSourcePath;
@@ -28,13 +28,14 @@ namespace NanoCore {
 
 		// Not serialized
 		std::string ProjectFileName;
-		std::string ProjectDirectory;
+		std::string ProjectDirectory = "resources";
 	};
 
 	class Project : public RefCount
 	{
 	public:
 		Project();
+		Project(ProjectConfig);
 		~Project();
 
 		const ProjectConfig& GetConfig() const { return m_Config; }

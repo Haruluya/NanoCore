@@ -7,16 +7,15 @@
 
 namespace NanoCore {
 
-	class ViewportPanel
+	class ViewportPanel : public NanoPanel
 	{
 	public:
-		ViewportPanel(Shared<EditorLayer> editor) { m_layerState = editor; }
+		ViewportPanel() {};
 
-		void OnImGuiRender();
+		virtual void OnUIRender(bool& isOpen) override;
 
 
 	private:
-		Shared<EditorLayer> m_layerState;
 	};
 
 }

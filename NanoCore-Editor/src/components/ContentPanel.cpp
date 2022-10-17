@@ -1,11 +1,9 @@
 #include "ncpch.h"
 #include "ContentPanel.h"
-
+#include "EditorLayer.h"
 #include <imgui/imgui.h>
 
 namespace NanoCore {
-
-
 	extern const std::filesystem::path g_AssetPath = "resources";
 
 	ContentPanel::ContentPanel()
@@ -15,7 +13,8 @@ namespace NanoCore {
 		m_FileIcon = Texture2D::Create("resources/icons/Content/FileIcon.png");
 	}
 
-	void ContentPanel::OnImGuiRender()
+
+	void ContentPanel::OnUIRender(bool& isOpen)
 	{
 		ImGui::Begin("Content");
 
@@ -79,5 +78,6 @@ namespace NanoCore {
 		// TODO: status bar
 		ImGui::End();
 	}
+
 
 }

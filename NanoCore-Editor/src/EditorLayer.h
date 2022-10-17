@@ -9,12 +9,14 @@
 
 #include "modules/entity/EditorCamera.h"
 
+#include "components/PanelManager.h"
+
 namespace NanoCore {
 	enum ThemeColor
 	{
 		THEME_BLUE, THEME_DARK, THEME_GRAY, THEME_LIGHT
 	};
-	class EditorLayer : public Layer, RefCount
+	class EditorLayer : public Layer, public RefCount
 	{
 	public:
 		EditorLayer();
@@ -28,6 +30,9 @@ namespace NanoCore {
 		void OnEvent(Event& e) override;
 		void OpenScene();
 		void OpenScene(const std::filesystem::path& path);
+
+		static EditorLayer* GetEditorContext() { return m_EditorInstance; }
+
 	private:
 		bool OnKeyPressed(KeyPressedEvent& e);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
@@ -50,12 +55,20 @@ namespace NanoCore {
 
 		void OnDuplicateEntity();
 
-		void UITitlebar();
+		void UITitlebar(float);
 		void UIMainMenu();
 
 		// UI Panels
 		void UI_Toolbar();
+
 	private:
+		static EditorLayer* m_EditorInstance;
+
+		Entity m_HoveredEntity;
+
+		Unique<PanelManager> m_PanelManager;
+
+
 		ThemeColor m_ThemeColor = THEME_DARK;
 
 		NanoCore::OrthographicCameraController m_CameraController;
@@ -103,11 +116,9 @@ namespace NanoCore {
 		SceneState m_SceneState = SceneState::Edit;
 
 		// Panels
-		HierarchyPanel m_HierarchyPanel;
-		ContentPanel m_ContentPanel;
-		ViewportPanel m_ViewportPanel;
-		SysStatusPanel m_SysStatusPanel;
-		GlobalSettingPanel m_GlobalSettingPanel;
+		Shared<HierarchyPanel> m_HierarchyPanel;
+		Shared<ContentPanel> m_ContentPanel;
+		Shared<GlobalSettingPanel> m_GlobalSettingPanel;
 
 		// Editor resources
 		Shared<Texture2D> m_IconPlay, m_IconSimulate, m_IconStop;
@@ -121,6 +132,7 @@ namespace NanoCore {
 		friend class ViewportPanel;
 		friend class HierarchyPanel;
 		friend class ContentPanel;
+		friend class SysStatusPanel;
 	};
 
 }

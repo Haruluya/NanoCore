@@ -8,6 +8,11 @@ namespace NanoCore {
 	{
 	}
 
+	Project::Project(ProjectConfig projectConfig)
+	{
+		this->m_Config = projectConfig;
+	}
+
 	Project::~Project()
 	{
 	}

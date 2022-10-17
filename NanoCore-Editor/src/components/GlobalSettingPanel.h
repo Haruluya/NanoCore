@@ -1,16 +1,16 @@
 #pragma once
 #include "NanoCore.h"
-
+#include "NanoPanel.h"
 #include <filesystem>
 
 namespace NanoCore {
 
-	class GlobalSettingPanel
+	class GlobalSettingPanel : public NanoPanel
 	{
 	public:
 		GlobalSettingPanel();
 
-		void OnImGuiRender();
+		virtual void OnUIRender(bool& isOpen) override;
 
 
 	private:

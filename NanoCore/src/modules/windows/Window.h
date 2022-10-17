@@ -14,15 +14,15 @@ namespace NanoCore{
 		uint32_t Height;
 
 		WindowProps(const std::string& title = "NanoCore",
-			uint32_t width = 1080,
-			uint32_t height = 720)
+			uint32_t width = 1728,
+			uint32_t height = 972)
 			: Title(title), Width(width), Height(height)
 		{
 		}
 	};
 
 
-	class Window
+	class Window : public RefCount
 	{
 	public:
 		using EventCallbackFn = std::function<void(Event&)>;
@@ -30,7 +30,7 @@ namespace NanoCore{
 		virtual ~Window() {}
 
 		virtual void OnUpdate() = 0;
-
+		virtual void ProcessEvents() = 0;
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
 

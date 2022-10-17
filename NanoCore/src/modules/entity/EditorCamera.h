@@ -4,7 +4,6 @@
 #include "modules/utils/Timestep.h"
 #include "modules/events/Event.h"
 #include "modules/events/EventTypes.h"
-
 #include <glm/glm.hpp>
 
 namespace NanoCore{
@@ -49,7 +48,7 @@ namespace NanoCore{
 		std::pair<float, float> PanSpeed() const;
 		float RotationSpeed() const;
 		float ZoomSpeed() const;
-	private:
+	public:
 		float m_FOV = 45.0f, m_AspectRatio = 1.778f, m_NearClip = 0.1f, m_FarClip = 1000.0f;
 
 		glm::mat4 m_ViewMatrix;
@@ -62,6 +61,8 @@ namespace NanoCore{
 		float m_Pitch = 0.0f, m_Yaw = 0.0f;
 
 		float m_ViewportWidth = 1280, m_ViewportHeight = 720;
+
+
 	};
 
 }

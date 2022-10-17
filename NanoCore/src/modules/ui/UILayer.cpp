@@ -40,7 +40,7 @@ namespace NanoCore{
 		//io.ConfigFlags |= ImGuiConfigFlags_ViewportsNoTaskBarIcons;
 		//io.ConfigFlags |= ImGuiConfigFlags_ViewportsNoMerge;
 
-		float fontSize = 18.0f;// *2.0f;
+		float fontSize = 20.0f;// *2.0f;
 		io.Fonts->AddFontFromFileTTF("resources/fonts/OpenSans-Bold.ttf", fontSize);
 		io.FontDefault = io.Fonts->AddFontFromFileTTF("resources/fonts/OpenSans-Regular.ttf", fontSize);
 
@@ -65,6 +65,8 @@ namespace NanoCore{
 		ImGui_ImplOpenGL3_Init("#version 410");
 
 		//ImGui::ShowDemoWindow(&show_demo);
+
+
 	}
 
 	void UILayer::OnDetach()

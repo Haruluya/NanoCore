@@ -12,6 +12,8 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <queue>
+#include <mutex>
 #include <array>
 #include <Windows.h>
 

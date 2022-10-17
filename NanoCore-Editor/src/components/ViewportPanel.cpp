@@ -3,50 +3,62 @@
 #include "ImGuizmo/ImGuizmo.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-extern const std::filesystem::path g_AssetPath;
+#include <filesystem>
 
-void NanoCore::ViewportPanel::OnImGuiRender()
+
+
+
+
+
+void NanoCore::ViewportPanel::OnUIRender(bool& isOpen)
 {
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 
 
 	ImGuiWindowFlags viewport_window_flags = 0;
 	viewport_window_flags |= ImGuiWindowFlags_NoCollapse;
+	viewport_window_flags |= ImGuiWindowFlags_NoTitleBar;
+	viewport_window_flags |= ImGuiWindowFlags_NoBackground;
+
 	if (ImGui::Begin("Viewport", NULL, viewport_window_flags)) {
 		auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
 		auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
 		auto viewportOffset = ImGui::GetWindowPos();
-		m_layerState->m_ViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
-		m_layerState->m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
+		EditorLayer::GetEditorContext()->m_ViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
+		EditorLayer::GetEditorContext()->m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
 
-		m_layerState->m_ViewportFocused = ImGui::IsWindowFocused();
-		m_layerState->m_ViewportHovered = ImGui::IsWindowHovered();
-		Application::Get().GetUILayer()->BlockEvents(!m_layerState->m_ViewportFocused && !m_layerState->m_ViewportHovered);
+		EditorLayer::GetEditorContext()->m_ViewportFocused = ImGui::IsWindowFocused();
+		EditorLayer::GetEditorContext()->m_ViewportHovered = ImGui::IsWindowHovered();
+		Application::Get().GetUILayer()->BlockEvents(!EditorLayer::GetEditorContext()->m_ViewportFocused && !EditorLayer::GetEditorContext()->m_ViewportHovered);
 
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-		m_layerState->m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
+		EditorLayer::GetEditorContext()->m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
-		uint64_t textureID = m_layerState->m_Framebuffer->GetColorAttachmentRendererID();
-		ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_layerState->m_ViewportSize.x,m_layerState->m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+
+		uint64_t textureID = EditorLayer::GetEditorContext()->m_Framebuffer->GetColorAttachmentRendererID();
+		ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ EditorLayer::GetEditorContext()->m_ViewportSize.x,EditorLayer::GetEditorContext()->m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 		if (ImGui::BeginDragDropTarget())
 		{
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 			{
 				const wchar_t* path = (const wchar_t*)payload->Data;
-				m_layerState->OpenScene(std::filesystem::path(g_AssetPath) / path);
+				EditorLayer::GetEditorContext()->OpenScene(std::filesystem::path(Project::GetAssetDirectory()) / path);
 			}
 			ImGui::EndDragDropTarget();
 		}
 
 		// Gizmos
-		Entity selectedEntity = m_layerState->m_HierarchyPanel.GetSelectedEntity();
-		if (selectedEntity && m_layerState->m_GizmoType != -1)
+
+		Entity selectedEntity = EditorLayer::GetEditorContext()->m_HierarchyPanel->GetSelectedEntity();
+
+
+		if (selectedEntity && EditorLayer::GetEditorContext()->m_GizmoType != -1)
 		{
 			ImGuizmo::SetOrthographic(false);
 			ImGuizmo::SetDrawlist();
 
-			ImGuizmo::SetRect(m_layerState->m_ViewportBounds[0].x, m_layerState->m_ViewportBounds[0].y, m_layerState->m_ViewportBounds[1].x - m_layerState->m_ViewportBounds[0].x, m_layerState->m_ViewportBounds[1].y - m_layerState->m_ViewportBounds[0].y);
+			ImGuizmo::SetRect(EditorLayer::GetEditorContext()->m_ViewportBounds[0].x, EditorLayer::GetEditorContext()->m_ViewportBounds[0].y, EditorLayer::GetEditorContext()->m_ViewportBounds[1].x - EditorLayer::GetEditorContext()->m_ViewportBounds[0].x, EditorLayer::GetEditorContext()->m_ViewportBounds[1].y - EditorLayer::GetEditorContext()->m_ViewportBounds[0].y);
 
 			// Camera
 
@@ -57,8 +69,8 @@ void NanoCore::ViewportPanel::OnImGuiRender()
 			// glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
 
 			// Editor camera
-			const glm::mat4& cameraProjection = m_layerState->m_EditorCamera.GetProjection();
-			glm::mat4 cameraView = m_layerState->m_EditorCamera.GetViewMatrix();
+			const glm::mat4& cameraProjection = EditorLayer::GetEditorContext()->m_EditorCamera.GetProjection();
+			glm::mat4 cameraView = EditorLayer::GetEditorContext()->m_EditorCamera.GetViewMatrix();
 
 			// Entity transform
 			auto& tc = selectedEntity.GetComponent<TransformComponent>();
@@ -68,13 +80,13 @@ void NanoCore::ViewportPanel::OnImGuiRender()
 			bool snap = Input::IsKeyPressed(Key::LeftControl);
 			float snapValue = 0.5f; // Snap to 0.5m for translation/scale
 			// Snap to 45 degrees for rotation
-			if (m_layerState->m_GizmoType == ImGuizmo::OPERATION::ROTATE)
+			if (EditorLayer::GetEditorContext()->m_GizmoType == ImGuizmo::OPERATION::ROTATE)
 				snapValue = 45.0f;
 
 			float snapValues[3] = { snapValue, snapValue, snapValue };
 
 			ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
-				(ImGuizmo::OPERATION)m_layerState->m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform),
+				(ImGuizmo::OPERATION)EditorLayer::GetEditorContext()->m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform),
 				nullptr, snap ? snapValues : nullptr);
 
 			if (ImGuizmo::IsUsing())
@@ -94,3 +106,5 @@ void NanoCore::ViewportPanel::OnImGuiRender()
 	}
 	ImGui::PopStyleVar();
 }
+
+

@@ -1,20 +1,22 @@
 #pragma once
 #include "NanoCore.h"
-
+#include "NanoPanel.h"
+#include "EditorLayer.h"
 #include <filesystem>
 
 namespace NanoCore {
 
-	class SysStatusPanel
+	class SysStatusPanel : public NanoPanel
 	{
 	public:
 		SysStatusPanel();
 
-		void OnImGuiRender();
+		virtual void OnUIRender(bool& isOpen) override;
+
 
 
 	private:
-		Entity m_HoveredEntity;
+
 	};
 
 }

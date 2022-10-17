@@ -5,7 +5,7 @@ NanoCore::GlobalSettingPanel::GlobalSettingPanel()
 {
 }
 
-void NanoCore::GlobalSettingPanel::OnImGuiRender()
+void NanoCore::GlobalSettingPanel::OnUIRender(bool& isOpen)
 {
 	if (ImGui::Begin("Settings")) {
 		//ImGui::Checkbox("Show physics colliders", &m_ShowPhysicsColliders);

@@ -13,8 +13,9 @@
 #include <GLFW/glfw3.h>
 
 
-#include "utils/ResourcesLoadFactory.hpp"
+#include "utils/ResourcesLoadFactory.h"
 
+#include "ui/NanoCoreUI.hpp"
 
 
 namespace NanoCore {
@@ -26,16 +27,31 @@ namespace NanoCore {
 	void SetLightThemeColors();
 
 
-	extern const std::filesystem::path g_AssetPath;
+	EditorLayer* EditorLayer::m_EditorInstance = nullptr;
 
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_CameraController(1280.0f / 720.0f), m_SquareColor({ 0.2f, 0.3f, 0.8f, 1.0f }), m_ViewportPanel(this)
+		: Layer("EditorLayer"), m_CameraController(1280.0f / 720.0f), m_SquareColor({ 0.2f, 0.3f, 0.8f, 1.0f })
 	{
+		m_EditorInstance = this;
 	}
 
 	void EditorLayer::OnAttach()
 	{
 		RA_PROFILE_FUNCTION();
+
+		// Init resources.
+		ResourcesLoadFactory::Init();
+
+		// Create panel manager.
+		m_PanelManager = std::make_unique<PanelManager>();
+
+		m_PanelManager->AddPanel<HierarchyPanel>(PanelCategory::Edit, "HierarchyPanel", "Hierarchy", true);
+		m_HierarchyPanel = m_PanelManager->GetPanel<HierarchyPanel>("HierarchyPanel");
+
+		m_PanelManager->AddPanel<ViewportPanel>(PanelCategory::Edit, "ViewPortPanel", "ViewPort", true);
+		m_PanelManager->AddPanel<SysStatusPanel>(PanelCategory::Edit, "SysStatusPanel", "SysStatus", true);
+		m_PanelManager->AddPanel<ContentPanel>(PanelCategory::Edit, "ContentPanel", "Content", true);
+		m_PanelManager->AddPanel<GlobalSettingPanel>(PanelCategory::Edit, "GlobalSettingPanel", "GlobalSetting", true);
 
 		m_CheckerboardTexture = Texture2D::Create("resources/textures/empty.png");
 		m_IconPlay = Texture2D::Create("resources/icons/Play.png");
@@ -181,11 +197,12 @@ namespace NanoCore {
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, isMaximized ? ImVec2(6.0f, 6.0f) : ImVec2(1.0f, 1.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 3.0f);
 		ImGui::PushStyleColor(ImGuiCol_MenuBarBg, ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f });
-		ImGui::Begin("DockSpace Demo", nullptr, window_flags);
+		ImGui::Begin("DockSpace", nullptr, window_flags);
 		ImGui::PopStyleColor(); // MenuBarBg
 		ImGui::PopStyleVar(2);
 
 		ImGui::PopStyleVar(2);
+
 
 
 
@@ -198,17 +215,23 @@ namespace NanoCore {
 		/*
 			Set title bar.
 		*/
-		UITitlebar();
+		const float titlebarHeight = 55.0f;
+		UITitlebar(titlebarHeight);
+		ImGui::SetCursorPosY(titlebarHeight + ImGui::GetCurrentWindow()->WindowPadding.y);
 
+
+		/*
+			DockSpace.
+		*/
+		float minWinSizeX = style.WindowMinSize.x;
+		style.WindowMinSize.x = 370.0f;
+		ImGui::DockSpace(ImGui::GetID("Dockspace"));
+		style.WindowMinSize.x = minWinSizeX;
 
 		/*
 			Set panels.
 		*/
-		m_HierarchyPanel.OnImGuiRender();
-		m_ContentPanel.OnImGuiRender();
-		m_ViewportPanel.OnImGuiRender();
-		m_SysStatusPanel.OnImGuiRender();
-		m_GlobalSettingPanel.OnImGuiRender();
+		m_PanelManager->OnUIRender();
 
 		/*
 			Set tool bar.
@@ -266,163 +289,351 @@ namespace NanoCore {
 		ImGui::End();
 	}
 
-	void EditorLayer::UITitlebar() {
+	void EditorLayer::UITitlebar(float titlebarHeight) {
+
+		const ImVec2 windowPadding = ImGui::GetCurrentWindow()->WindowPadding;
 
 
-		//const float titlebarHeight = 57.0f;
-		//const ImVec2 windowPadding = ImGui::GetCurrentWindowRead()->WindowPadding;
+		ImGui::SetCursorPos(ImVec2(windowPadding.x, windowPadding.y));
+		const ImVec2 titlebarMin = ImGui::GetCursorScreenPos();
+		const ImVec2 titlebarMax = { ImGui::GetCursorScreenPos().x + ImGui::GetWindowWidth() - windowPadding.y * 2.0f,
+									 ImGui::GetCursorScreenPos().y + titlebarHeight };
+		auto* drawList = ImGui::GetWindowDrawList();
+		drawList->AddRectFilled(titlebarMin, titlebarMax, UI::Color::titlebar);
 
-		//ImGui::SetCursorPos(ImVec2(windowPadding.x, windowPadding.y));
-		//const ImVec2 titlebarMin = ImGui::GetCursorScreenPos();
-		//const ImVec2 titlebarMax = { ImGui::GetCursorScreenPos().x + ImGui::GetWindowWidth() - windowPadding.y * 2.0f,
-		//							 ImGui::GetCursorScreenPos().y + titlebarHeight };
-		//auto* drawList = ImGui::GetWindowDrawList();
+		// Logo
+		{
+			const int logoWidth = ResourcesLoadFactory::LogoTexture->GetWidth();
+			const int logoHeight = ResourcesLoadFactory::LogoTexture->GetHeight();
+			const ImVec2 logoOffset(16.0f + windowPadding.x, 8.0f + windowPadding.y);
+			ImVec2 logoRectStart = { ImGui::GetItemRectMin().x + logoOffset.x, ImGui::GetItemRectMin().y + logoOffset.y };
+			ImVec2 logoRectMax = { logoRectStart.x + logoWidth, logoRectStart.y + logoHeight };
+			logoRectStart.x -= 5.0f;
+			logoRectStart.y -= 5.0f;
+			logoRectMax.x -= 5.0f;
+			logoRectMax.y -= 5.0f;
+
+			drawList->AddImage((ImTextureID)ResourcesLoadFactory::LogoTexture->GetRendererID(), logoRectStart, logoRectMax);
+		}
+
+		ImGui::BeginHorizontal("Titlebar", { ImGui::GetWindowWidth() - windowPadding.y * 2.0f, ImGui::GetFrameHeightWithSpacing() });
+
+		static float moveOffsetX;
+		static float moveOffsetY;
+		const float w = ImGui::GetContentRegionAvail().x;
+		const float buttonsAreaWidth = 94;
+
+		// Title bar drag area
+
+		// On Windows we hook into the GLFW win32 window internals
+
+		auto* rootWindow = ImGui::GetCurrentWindow()->RootWindow;
+		const float windowWidth = (int)rootWindow->RootWindow->Size.x;
+
+		if (ImGui::InvisibleButton("##titleBarDragZone", ImVec2(w - buttonsAreaWidth, titlebarHeight), ImGuiButtonFlags_PressedOnClick))
+		{
+			ImVec2 point = ImGui::GetMousePos();
+			ImRect rect = rootWindow->Rect();
+			// Calculate the difference between the cursor pos and window pos
+			moveOffsetX = point.x - rect.Min.x;
+			moveOffsetY = point.y - rect.Min.y;
+
+		}
+
+		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
+		{
+			auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+			bool maximized = (bool)glfwGetWindowAttrib(window, GLFW_MAXIMIZED);
+			if (maximized)
+				glfwRestoreWindow(window);
+			else
+				Application::Get().GetWindow().Maximize();
+		}
+		else if (ImGui::IsItemActive())
+		{
+			// TODO: move this stuff to a better place, like Window class
+			if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+			{
+				auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+				int maximized = glfwGetWindowAttrib(window, GLFW_MAXIMIZED);
+				if (maximized)
+				{
+					glfwRestoreWindow(window);
+
+					int newWidth, newHeight;
+					glfwGetWindowSize(window, &newWidth, &newHeight);
+
+					// Offset position proportionally to mouse position on titlebar
+					// This ensures we dragging window relatively to cursor position on titlebar
+					// correctly when window size changes
+					if (windowWidth - (float)newWidth > 0.0f)
+						moveOffsetX *= (float)newWidth / windowWidth;
+				}
+
+				ImVec2 point = ImGui::GetMousePos();
+				glfwSetWindowPos(window, point.x - moveOffsetX, point.y - moveOffsetY);
+
+			}
+		}
 
 
-		//{
-		//	int logoWidth, logoHeight;
-		//	GLuint logo_texture = 0;
-		//	if (ResourcesLoadFactory::LoadTextureFromFile("resources/icons/nanocore_label.png", &logo_texture,&logoWidth, &logoHeight)) {
-		//		const ImVec2 logoOffset(16.0f + windowPadding.x, 8.0f + windowPadding.y);
-		//		const ImVec2 logoRectStart = { ImGui::GetItemRectMin().x + logoOffset.x, ImGui::GetItemRectMin().y + logoOffset.y };
-		//		const ImVec2 logoRectMax = { logoRectStart.x + logoWidth, logoRectStart.y + logoHeight };
-		//		drawList->AddImage((ImTextureID)logo_texture, logoRectStart, logoRectMax);
-		//	}
-		//	else {
-		//		NANO_ENGINE_LOG_ERROR("Logo not found!");
-		//	}
-		//}
-		//ImGui::BeginHorizontal("Titlebar", { ImGui::GetWindowWidth() - windowPadding.y * 2.0f, ImGui::GetFrameHeightWithSpacing() });
+		// Draw Menubar
 
-		//static float moveOffsetX;
-		//static float moveOffsetY;
-		//const float w = ImGui::GetContentRegionAvail().x;
-		//const float buttonsAreaWidth = 94;
+		UIMainMenu();
 
-		//ImGui::InvisibleButton("##titleBarDragZone", ImVec2(w - buttonsAreaWidth, titlebarHeight));
-		//m_TitleBarHovered = ImGui::IsItemHovered();
+		const float menuBarRight = ImGui::GetItemRectMax().x - ImGui::GetCurrentWindow()->Pos.x;
 
-		//auto* rootWindow = ImGui::GetCurrentWindow()->RootWindow;
-		//const float windowWidth = (int)rootWindow->RootWindow->Size.x;
+		// Project name
+		{
 
-		//if (ImGui::InvisibleButton("##titleBarDragZone", ImVec2(w - buttonsAreaWidth, titlebarHeight), ImGuiButtonFlags_PressedOnClick))
-		//{
-		//	ImVec2 point = ImGui::GetMousePos();
-		//	ImRect rect = rootWindow->Rect();
-		//	// Calculate the difference between the cursor pos and window pos
-		//	moveOffsetX = point.x - rect.Min.x;
-		//	moveOffsetY = point.y - rect.Min.y;
+			UI::ScopedColour textColour(ImGuiCol_Text, UI::Color::textDarker);
+			UI::ScopedColour border(ImGuiCol_Border, IM_COL32(40, 40, 40, 255));
 
-		//}
+			const std::string title = Project::GetActive()->GetConfig().Name + " Version:1.0.0";
+			const ImVec2 textSize = ImGui::CalcTextSize(title.c_str());
+			const float rightOffset = ImGui::GetWindowWidth() / 5.0f;
+			ImGui::SameLine();
+			ImGui::SetCursorPosX(ImGui::GetWindowWidth() - rightOffset - textSize.x);
+			UI::ShiftCursorY(1.0f + windowPadding.y);
 
-		//if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
-		//{
-		//	auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
-		//	bool maximized = (bool)glfwGetWindowAttrib(window, GLFW_MAXIMIZED);
-		//	if (maximized)
-		//		glfwRestoreWindow(window);
-		//	else
-		//		Application::Get().GetWindow().Maximize();
-		//}
-		//else if (ImGui::IsItemActive())
-		//{
-		//	// TODO: move this stuff to a better place, like Window class
-		//	if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
-		//	{
-		//		auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
-		//		int maximized = glfwGetWindowAttrib(window, GLFW_MAXIMIZED);
-		//		if (maximized)
-		//		{
-		//			glfwRestoreWindow(window);
+			{
+				UI::ScopedFont boldFont(ImGui::GetIO().Fonts->Fonts[0]);
+				ImGui::Text(title.c_str());
+			}
+			UI::SetTooltip("NanoCore By Haruluya.");
 
-		//			int newWidth, newHeight;
-		//			glfwGetWindowSize(window, &newWidth, &newHeight);
 
-		//			// Offset position proportionally to mouse position on titlebar
-		//			// This ensures we dragging window relatively to cursor position on titlebar
-		//			// correctly when window size changes
-		//			if (windowWidth - (float)newWidth > 0.0f)
-		//				moveOffsetX *= (float)newWidth / windowWidth;
-		//		}
+			UI::DrawBorder(UI::RectExpanded(UI::GetItemRect(), 24.0f, 68.0f), 1.0f, 3.0f, 0.0f, -60.0f);
+		}
 
-		//		ImVec2 point = ImGui::GetMousePos();
-		//		glfwSetWindowPos(window, point.x - moveOffsetX, point.y - moveOffsetY);
+		// Current Scene name
+		{
+			UI::ScopedColour textColour(ImGuiCol_Text, UI::Color::text);
+			const std::string sceneName = "Haruluya";
 
-		//	}
-		//}
+			ImGui::SetCursorPosX(menuBarRight);
+			UI::ShiftCursorX(50.0f);
 
-		//ImGui::SuspendLayout();
-		//{
-		//	ImGui::SetItemAllowOverlap();
-		//	const float logoOffset = 16.0f * 2.0f + 41.0f + windowPadding.x;
-		//	ImGui::SetCursorPos(ImVec2(logoOffset, 4.0f));
-		//	UIMainMenu();
+			{
+				UI::ScopedFont boldFont(ImGui::GetIO().Fonts->Fonts[0]);
+				ImGui::Text(sceneName.c_str());
+			}
+			UI::SetTooltip("Current scene ()");
 
-		//	if (ImGui::IsItemHovered())
-		//		m_TitleBarHovered = false;
-		//}
+			const float underlineThickness = 2.0f;
+			const float underlineExpandWidth = 4.0f;
 
-		//const float menuBarRight = ImGui::GetItemRectMax().x - ImGui::GetCurrentWindow()->Pos.x;
+			ImRect itemRect = UI::RectExpanded(UI::GetItemRect(), underlineExpandWidth, 0.0f);
 
-		//// Project name
-		//{
 
-		//	const std::string title = "NanoCore-Haruluya";
-		//	const ImVec2 textSize = ImGui::CalcTextSize(title.c_str());
-		//	const float rightOffset = ImGui::GetWindowWidth() / 5.0f;
-		//	ImGui::SameLine();
-		//	ImGui::SetCursorPosX(ImGui::GetWindowWidth() - rightOffset - textSize.x);
-		//	ImRect rect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
-		//	//1466.4,-124,1577.4,32,3,1
-		//	drawList->AddRect({ 1466.4f ,-124.0f }, {1577.4f,32.0f}, ImGui::ColorConvertFloat4ToU32(ImGui::GetStyleColorVec4(ImGuiCol_Border)), 3, 0, 1);
-		//}
+			// Horizontal line
+			itemRect.Min.y = itemRect.Max.y - underlineThickness;
+			itemRect = UI::RectOffset(itemRect, 0.0f, underlineThickness * 2.0f);
 
-		//ImGui::EndHorizontal();
+			// Vertical line
+			//itemRect.Max.x = itemRect.Min.x + underlineThickness;
+			//itemRect = UI::RectOffset(itemRect, -underlineThickness * 2.0f, 0.0f);
+			drawList->AddRectFilled(itemRect.Min, itemRect.Max, UI::Color::muted, 2.0f);
+		}
+		ImGui::ResumeLayout();
+
+		// Window buttons
+		const ImU32 buttonColN = UI::ColourWithMultipliedValue(UI::Color::text, 0.9f);
+		const ImU32 buttonColH = UI::ColourWithMultipliedValue(UI::Color::text, 1.2f);
+		const ImU32 buttonColP = UI::Color::textDarker;
+		const float buttonWidth = 14.0f;
+		const float buttonHeight = 14.0f;
+
+		// Minimize Button
+
+		ImGui::Spring();
+		UI::ShiftCursorY(8.0f);
+		{
+			const int iconWidth = ResourcesLoadFactory::MinimizeIcon->GetWidth();
+			const int iconHeight = ResourcesLoadFactory::MinimizeIcon->GetHeight();
+			const float padY = (buttonHeight - (float)iconHeight) / 2.0f;
+
+			if (ImGui::InvisibleButton("Minimize", ImVec2(buttonWidth, buttonHeight)))
+			{
+				if (auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow()))
+				{
+					Application::Get().QueueEvent([window]() { glfwIconifyWindow(window); });
+				}
+			}
+
+			UI::DrawButtonImage(ResourcesLoadFactory::MinimizeIcon, buttonColN, buttonColH, buttonColP, UI::RectExpanded(UI::GetItemRect(), 0.0f, -padY));
+		}
+
+
+		// Maximize Button
+
+		ImGui::Spring(-1.0f, 17.0f);
+		UI::ShiftCursorY(8.0f);
+		{
+			const int iconWidth = ResourcesLoadFactory::MaximizeIcon->GetWidth();
+			const int iconHeight = ResourcesLoadFactory::MaximizeIcon->GetHeight();
+
+			auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+			bool isMaximized = (bool)glfwGetWindowAttrib(window, GLFW_MAXIMIZED);
+
+			if (ImGui::InvisibleButton("Maximize", ImVec2(buttonWidth, buttonHeight)))
+			{
+				if (isMaximized)
+				{
+					Application::Get().QueueEvent([window]() { glfwRestoreWindow(window); });
+				}
+				else
+				{
+					Application::Get().QueueEvent([]() { Application::Get().GetWindow().Maximize(); });
+				}
+			}
+
+			UI::DrawButtonImage(isMaximized ? ResourcesLoadFactory::RestoreIcon : ResourcesLoadFactory::MaximizeIcon, buttonColN, buttonColH, buttonColP);
+		}
+
+
+		// Close Button
+
+		ImGui::Spring(-1.0f, 15.0f);
+		UI::ShiftCursorY(8.0f);
+		{
+			const int iconWidth = ResourcesLoadFactory::CloseIcon->GetWidth();
+			const int iconHeight = ResourcesLoadFactory::CloseIcon->GetHeight();
+			if (ImGui::InvisibleButton("Close", ImVec2(buttonWidth, buttonHeight)))
+			{
+				Application::Get().DispatchEvent<WindowCloseEvent>();
+			}
+
+			UI::DrawButtonImage(ResourcesLoadFactory::CloseIcon, UI::Color::text, UI::ColourWithMultipliedValue(UI::Color::text, 1.4f), buttonColP);
+		}
+
+		ImGui::Spring(-1.0f, 18.0f);
+		ImGui::EndHorizontal();
 
 	}
 
 
 
 	void EditorLayer::UIMainMenu() {
-		if (ImGui::BeginMenuBar())
+		ImGui::SuspendLayout();
 		{
-			if (ImGui::BeginMenu("File"))
-			{
-				if (ImGui::MenuItem("New", "Ctrl+N"))
-					NewScene();
+			auto windowPadding = ImGui::GetCurrentWindow()->WindowPadding;
+			ImGui::SetItemAllowOverlap();
+			const float logoOffset = 16.0f * 2.0f + 41.0f + windowPadding.x;
+			ImGui::SetCursorPos(ImVec2(logoOffset, 4.0f));
+			const ImRect menuBarRect = { ImGui::GetCursorPos(), {ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeightWithSpacing()} };
 
-				if (ImGui::MenuItem("Open...", "Ctrl+O"))
-					OpenScene();
+			ImGui::BeginGroup();
 
-				if (ImGui::MenuItem("Save", "Ctrl+S"))
-					SaveScene();
+			if (UI::BeginMenuBar(menuBarRect))
+			{
+				bool menuOpen = ImGui::IsPopupOpen("##menubar", ImGuiPopupFlags_AnyPopupId);
 
-				if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
-					SaveSceneAs();
-
-				if (ImGui::MenuItem("Exit")) Application::Get().Close();
-				ImGui::EndMenu();
-			}
-			if (ImGui::BeginMenu("Edit"))
-			{
-				ImGui::EndMenu();
-			}
-			if (ImGui::BeginMenu("Windows"))
-			{
-				ImGui::EndMenu();
-			}
-			if (ImGui::BeginMenu("Setting"))
-			{
-				if (ImGui::MenuItem("Style")) {
-					m_show_style_setting = true;
+				if (menuOpen)
+				{
+					const ImU32 colActive = UI::ColourWithSaturation(UI::Color::accent, 0.5f);
+					ImGui::PushStyleColor(ImGuiCol_Header, colActive);
+					ImGui::PushStyleColor(ImGuiCol_HeaderHovered, colActive);
 				}
-				ImGui::EndMenu();
+
+				auto popItemHighlight = [&menuOpen]
+				{
+					if (menuOpen)
+					{
+						ImGui::PopStyleColor(3);
+						menuOpen = false;
+					}
+				};
+
+				auto pushDarkTextIfActive = [](const char* menuName)
+				{
+					if (ImGui::IsPopupOpen(menuName))
+					{
+						ImGui::PushStyleColor(ImGuiCol_Text, UI::Color::backgroundDark);
+						return true;
+					}
+					return false;
+				};
+
+				const ImU32 colHovered = IM_COL32(0, 0, 0, 80);
+
+				{
+					bool colourPushed = pushDarkTextIfActive("File");
+
+					if (ImGui::BeginMenuEx("File","A"))
+					{
+						ImGui::EndMenu();
+					}
+
+					if (colourPushed)
+						ImGui::PopStyleColor();
+				}
+
+				{
+					bool colourPushed = pushDarkTextIfActive("Edit");
+
+					if (ImGui::BeginMenu("Edit"))
+					{
+
+						ImGui::EndMenu();
+					}
+
+					if (colourPushed)
+						ImGui::PopStyleColor();
+				}
+
+				{
+					bool colourPushed = pushDarkTextIfActive("View");
+
+					if (ImGui::BeginMenu("View"))
+					{
+
+						ImGui::EndMenu();
+					}
+
+					if (colourPushed)
+						ImGui::PopStyleColor();
+				}
+
+
+				{
+					bool colourPushed = pushDarkTextIfActive("Tools");
+
+					if (ImGui::BeginMenu("Tools"))
+					{
+						ImGui::EndMenu();
+					}
+
+					if (colourPushed)
+						ImGui::PopStyleColor();
+				}
+
+				{
+					bool colourPushed = pushDarkTextIfActive("Help");
+
+					if (ImGui::BeginMenu("Help"))
+					{
+						popItemHighlight();
+						colourPushed = false;
+
+						ImGui::PushStyleColor(ImGuiCol_HeaderHovered, colHovered);
+
+						if (ImGui::MenuItem("About"))
+
+							ImGui::PopStyleColor();
+						ImGui::EndMenu();
+					}
+
+					if (colourPushed)
+						ImGui::PopStyleColor();
+				}
+
+				if (menuOpen)
+					ImGui::PopStyleColor(2);
 			}
-			if (ImGui::BeginMenu("Help"))
-			{
-				ImGui::EndMenu();
-			}
-			ImGui::EndMenuBar();
+			UI::EndMenuBar();
+
+			ImGui::EndGroup();
 		}
 	}
 
@@ -519,7 +730,7 @@ namespace NanoCore {
 		if (e.GetMouseButton() == Mouse::ButtonLeft)
 		{
 			if (m_ViewportHovered && !ImGuizmo::IsOver() && !Input::IsKeyPressed(Key::LeftAlt))
-				m_HierarchyPanel.SetSelectedEntity(m_HoveredEntity);
+				m_HierarchyPanel->SetSelectedEntity(m_HoveredEntity);
 		}
 		return false;
 	}
@@ -578,7 +789,7 @@ namespace NanoCore {
 		}
 
 		// Draw selected entity outline 
-		if (Entity selectedEntity = m_HierarchyPanel.GetSelectedEntity())
+		if (Entity selectedEntity = m_HierarchyPanel->GetSelectedEntity())
 		{
 			const TransformComponent& transform = selectedEntity.GetComponent<TransformComponent>();
 			RenderUtils::DrawRect(transform.GetTransform(), glm::vec4(1.0f, 0.5f, 0.0f, 1.0f));
@@ -595,7 +806,7 @@ namespace NanoCore {
 	{
 		m_ActiveScene = Shared<Scene>::Create();
 		m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-		m_HierarchyPanel.SetContext(m_ActiveScene);
+		m_HierarchyPanel->SetScene((m_ActiveScene));
 
 		m_EditorScenePath = std::filesystem::path();
 	}
@@ -623,7 +834,7 @@ namespace NanoCore {
 		{
 			m_EditorScene = newScene;
 			m_EditorScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-			m_HierarchyPanel.SetContext(m_EditorScene);
+			m_HierarchyPanel->SetScene(m_EditorScene);
 
 			m_ActiveScene = m_EditorScene;
 			m_EditorScenePath = path;
@@ -664,7 +875,7 @@ namespace NanoCore {
 		m_ActiveScene = Scene::Copy(m_EditorScene);
 		m_ActiveScene->OnRuntimeStart();
 
-		m_HierarchyPanel.SetContext(m_ActiveScene);
+		m_HierarchyPanel->SetScene(m_ActiveScene);
 	}
 
 	void EditorLayer::OnSceneSimulate()
@@ -677,7 +888,7 @@ namespace NanoCore {
 		m_ActiveScene = Scene::Copy(m_EditorScene);
 		m_ActiveScene->OnSimulationStart();
 
-		m_HierarchyPanel.SetContext(m_ActiveScene);
+		m_HierarchyPanel->SetScene(m_ActiveScene);
 	}
 
 	void EditorLayer::OnSceneStop()
@@ -693,7 +904,7 @@ namespace NanoCore {
 
 		m_ActiveScene = m_EditorScene;
 
-		m_HierarchyPanel.SetContext(m_ActiveScene);
+		m_HierarchyPanel->SetScene(m_ActiveScene);
 	}
 
 	void EditorLayer::StyleSetting()
@@ -928,7 +1139,7 @@ namespace NanoCore {
 		if (m_SceneState != SceneState::Edit)
 			return;
 
-		Entity selectedEntity = m_HierarchyPanel.GetSelectedEntity();
+		Entity selectedEntity = m_HierarchyPanel->GetSelectedEntity();
 		if (selectedEntity)
 			m_EditorScene->DuplicateEntity(selectedEntity);
 	}
@@ -1022,6 +1233,8 @@ namespace NanoCore {
 
 	void SetDarkThemeColors() {
 		auto& style = ImGui::GetStyle();
+
+
 		ImVec4* colors = style.Colors;
 
 		const ImVec4 none = {};
@@ -1047,8 +1260,8 @@ namespace NanoCore {
 		colors[ImGuiCol_ModalWindowDimBg] = none;
 		colors[ImGuiCol_TableRowBg] = none;
 
-		colors[ImGuiCol_Text] = grey(180);
-		colors[ImGuiCol_TextDisabled] = grey(90);
+		colors[ImGuiCol_Text] = grey(180,0.8f);
+		colors[ImGuiCol_TextDisabled] = grey(90, 0.8f);
 
 		colors[ImGuiCol_CheckMark] = rgb(0, 112, 224);
 		colors[ImGuiCol_DragDropTarget] = rgb(0, 112, 224);
@@ -1071,44 +1284,44 @@ namespace NanoCore {
 		colors[ImGuiCol_TextSelectedBg] = grey(128, 0.25f);
 		colors[ImGuiCol_TableRowBgAlt] = grey(128, 0.05f);
 
-		colors[ImGuiCol_SliderGrabActive] = grey(128);
-		colors[ImGuiCol_ScrollbarGrabActive] = grey(128);
-		colors[ImGuiCol_ScrollbarGrabHovered] = grey(128);
-		colors[ImGuiCol_ResizeGripActive] = grey(128);
-		colors[ImGuiCol_ResizeGripHovered] = grey(128);
+		colors[ImGuiCol_SliderGrabActive] = grey(128, 0.8f);
+		colors[ImGuiCol_ScrollbarGrabActive] = grey(128, 0.8f);
+		colors[ImGuiCol_ScrollbarGrabHovered] = grey(128, 0.8f);
+		colors[ImGuiCol_ResizeGripActive] = grey(128, 0.8f);
+		colors[ImGuiCol_ResizeGripHovered] = grey(128, 0.8f);
 
-		colors[ImGuiCol_SliderGrab] = grey(87);
-		colors[ImGuiCol_ScrollbarGrab] = grey(87);
-		colors[ImGuiCol_ResizeGrip] = grey(87);
+		colors[ImGuiCol_SliderGrab] = grey(87, 0.8f);
+		colors[ImGuiCol_ScrollbarGrab] = grey(87, 0.8f);
+		colors[ImGuiCol_ResizeGrip] = grey(87, 0.8f);
 
-		colors[ImGuiCol_Button] = grey(60);
-		colors[ImGuiCol_ButtonHovered] = grey(47);
-		colors[ImGuiCol_ButtonActive] = grey(47);
+		colors[ImGuiCol_Button] = grey(60, 0.8f);
+		colors[ImGuiCol_ButtonHovered] = grey(47, 0.8f);
+		colors[ImGuiCol_ButtonActive] = grey(47, 0.8f);
 
-		colors[ImGuiCol_Header] = grey(47);
-		colors[ImGuiCol_HeaderHovered] = grey(47);
-		colors[ImGuiCol_HeaderActive] = grey(47);
+		colors[ImGuiCol_Header] = grey(47, 0.8f);
+		colors[ImGuiCol_HeaderHovered] = grey(47, 0.8f);
+		colors[ImGuiCol_HeaderActive] = grey(47, 0.8f);
 
-		colors[ImGuiCol_TableHeaderBg] = grey(47);
-		colors[ImGuiCol_SeparatorActive] = grey(47);
-		colors[ImGuiCol_SeparatorHovered] = grey(47);
-		colors[ImGuiCol_TabHovered] = grey(47);
+		colors[ImGuiCol_TableHeaderBg] = grey(47, 0.8f);
+		colors[ImGuiCol_SeparatorActive] = grey(47, 0.8f);
+		colors[ImGuiCol_SeparatorHovered] = grey(47, 0.8f);
+		colors[ImGuiCol_TabHovered] = grey(47, 0.8f);
 
-		colors[ImGuiCol_WindowBg] = grey(36);
-		colors[ImGuiCol_TabActive] = grey(36);
-		colors[ImGuiCol_TabUnfocusedActive] = grey(36);
+		colors[ImGuiCol_WindowBg] = grey(36, 0.8f);
+		colors[ImGuiCol_TabActive] = grey(36, 0.8f);
+		colors[ImGuiCol_TabUnfocusedActive] = grey(36, 0.8f);
 
-		colors[ImGuiCol_ChildBg] = grey(28);
+		colors[ImGuiCol_ChildBg] = grey(28, 0.8f);
 
-		colors[ImGuiCol_Separator] = grey(26);
-		colors[ImGuiCol_TableBorderLight] = grey(26);
-		colors[ImGuiCol_TableBorderStrong] = grey(26);
-		colors[ImGuiCol_ScrollbarBg] = grey(26);
+		colors[ImGuiCol_Separator] = grey(26, 0.8f);
+		colors[ImGuiCol_TableBorderLight] = grey(26, 0.8f);
+		colors[ImGuiCol_TableBorderStrong] = grey(26, 0.8f);
+		colors[ImGuiCol_ScrollbarBg] = grey(26, 0.8f);
 
-		colors[ImGuiCol_TitleBg] = grey(21);
-		colors[ImGuiCol_TitleBgActive] = grey(21);
-		colors[ImGuiCol_TitleBgCollapsed] = grey(21);
-		colors[ImGuiCol_MenuBarBg] = grey(21);
+		colors[ImGuiCol_TitleBg] = grey(21, 0.8f);
+		colors[ImGuiCol_TitleBgActive] = grey(21, 0.8f);
+		colors[ImGuiCol_TitleBgCollapsed] = grey(21, 0.8f);
+		colors[ImGuiCol_MenuBarBg] = grey(21, 0.8f);
 
 
 		style.WindowPadding = ImVec2(4, 4);
@@ -1132,7 +1345,7 @@ namespace NanoCore {
 		style.WindowRounding = 0;
 		style.ChildRounding = 0;
 		style.TabBorderSize = 0;
-		style.TabRounding = 0;
+		style.TabRounding = 6.0f;
 
 
 		if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {

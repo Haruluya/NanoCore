@@ -1,17 +1,17 @@
 #pragma once
 #include "NanoCore.h"
 #include "modules/rendering/Texture.h"
-
+#include "NanoPanel.h"
 #include <filesystem>
 
 namespace NanoCore {
 
-	class ContentPanel
+	class ContentPanel : public NanoPanel
 	{
 	public:
 		ContentPanel();
 
-		void OnImGuiRender();
+		virtual void OnUIRender(bool& isOpen) override;
 
 
 		//static float m_padding;
@@ -21,6 +21,7 @@ namespace NanoCore {
 
 		Shared<Texture2D> m_DirectoryIcon;
 		Shared<Texture2D> m_FileIcon;
+
 	};
 
 }

@@ -67,4 +67,6 @@
 
 
 #include "modules/utils/FileManager.h"
+#include "modules/utils/Hash.h"
 
+#include "modules/info/Project.h"

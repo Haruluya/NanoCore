@@ -8,6 +8,8 @@
 #include "modules/events/Input.h"
 #include "modules/utils/PlatformUtils.h"
 
+#include "modules/info/Project.h"
+
 namespace NanoCore{
 
 	Application* Application::s_Instance = nullptr;
@@ -31,7 +33,12 @@ namespace NanoCore{
 
 		m_UILayer = new UILayer();
 		PushOverlay(m_UILayer);
-	}
+
+		ProjectConfig projectConfig{"Haruluya"};
+
+		Project::SetActive(new Project(projectConfig));
+
+;	}
 
 	Application::~Application()
 	{
@@ -88,7 +95,7 @@ namespace NanoCore{
 			float time = Time::GetTime();
 			Timestep timestep = time - m_LastFrameTime;
 			m_LastFrameTime = time;
-
+			ProcessEvents();
 			if (!m_Minimized)
 			{
 				{
@@ -132,6 +139,20 @@ namespace NanoCore{
 		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
 
 		return false;
+	}
+	void Application::ProcessEvents()
+	{
+		m_Window->ProcessEvents();
+
+		std::scoped_lock<std::mutex> lock(m_EventQueueMutex);
+
+		// Process custom event queue
+		while (m_EventQueue.size() > 0)
+		{
+			auto& func = m_EventQueue.front();
+			func();
+			m_EventQueue.pop();
+		}
 	}
 
 }

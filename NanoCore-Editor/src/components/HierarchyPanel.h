@@ -2,19 +2,18 @@
 #include "NanoCore.h"
 #include "modules/entity/Scene.h"
 #include "modules/entity/Entity.h"
-
+#include "NanoPanel.h"
 
 namespace NanoCore {
 
-	class HierarchyPanel
+	class HierarchyPanel : public NanoPanel
 	{
 	public:
 		HierarchyPanel() = default;
 		HierarchyPanel(const Shared<Scene>& scene);
+		virtual void OnUIRender(bool& isOpen) override;
+		virtual void SetScene(const Shared<Scene>& context) override;
 
-		void SetContext(const Shared<Scene>& scene);
-
-		void OnImGuiRender();
 
 		Entity GetSelectedEntity() const { return m_SelectionContext; }
 		void SetSelectedEntity(Entity entity);
