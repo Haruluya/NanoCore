@@ -1,0 +1,10 @@
+F:\Note-Haruluya\Project\NanoCore\NanoCore-Script\bin\Release\netcoreapp3.1\NanoCore-Script.deps.json
+F:\Note-Haruluya\Project\NanoCore\NanoCore-Script\bin\Release\netcoreapp3.1\NanoCore-Script.dll
+F:\Note-Haruluya\Project\NanoCore\NanoCore-Script\bin\Release\netcoreapp3.1\NanoCore-Script.pdb
+F:\Note-Haruluya\Project\NanoCore\NanoCore-Script\obj\Release\netcoreapp3.1\NanoCore-Script.csproj.AssemblyReference.cache
+F:\Note-Haruluya\Project\NanoCore\NanoCore-Script\obj\Release\netcoreapp3.1\NanoCore-Script.GeneratedMSBuildEditorConfig.editorconfig
+F:\Note-Haruluya\Project\NanoCore\NanoCore-Script\obj\Release\netcoreapp3.1\NanoCore-Script.AssemblyInfoInputs.cache
+F:\Note-Haruluya\Project\NanoCore\NanoCore-Script\obj\Release\netcoreapp3.1\NanoCore-Script.AssemblyInfo.cs
+F:\Note-Haruluya\Project\NanoCore\NanoCore-Script\obj\Release\netcoreapp3.1\NanoCore-Script.csproj.CoreCompileInputs.cache
+F:\Note-Haruluya\Project\NanoCore\NanoCore-Script\obj\Release\netcoreapp3.1\NanoCore-Script.dll
+F:\Note-Haruluya\Project\NanoCore\NanoCore-Script\obj\Release\netcoreapp3.1\NanoCore-Script.pdb

@@ -18,7 +18,10 @@
 #include <Windows.h>
 
 #include "core/log/Log.h"
+#include "core/math/NanoMath.h"
 
 #include "modules/utils/Instrumentor.h"
 
 #include "modules/ref/Shared.h"
+
+

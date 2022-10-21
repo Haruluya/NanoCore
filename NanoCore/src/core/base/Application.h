@@ -32,6 +32,7 @@ namespace NanoCore{
 	{
 		std::string Name = "NanoCoreApplication";
 		std::string WorkingDirectory;
+		std::string LogoPath;
 		ApplicationCommandLineArgs CommandLineArgs;
 	};
 
@@ -80,11 +81,15 @@ namespace NanoCore{
 		static Application& Get() { return *s_Instance; }
 
 		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
-	private:
+		void SubmitToMainThread(const std::function<void()>& function);
 		void Run();
+	private:
+
 		bool OnWindowClose(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
 		void ProcessEvents();
+
+		void ExecuteMainThreadQueue();
 	private:
 		ApplicationSpecification m_Specification;
 		Unique<Window> m_Window;
@@ -94,6 +99,9 @@ namespace NanoCore{
 		LayerStack m_LayerStack;
 		float m_LastFrameTime = 0.0f;
 
+
+		std::vector<std::function<void()>> m_MainThreadQueue;
+		std::mutex m_MainThreadQueueMutex;
 
 		std::mutex m_EventQueueMutex;
 		std::queue<std::function<void()>> m_EventQueue;

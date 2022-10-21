@@ -3,7 +3,7 @@
 #include "SceneCamera.h"
 #include "modules/utils/UUID.h"
 #include "modules/rendering/Texture.h"
-
+#include "core/math/NanoMath.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -49,6 +49,10 @@ namespace NanoCore{
 				* rotation
 				* glm::scale(glm::mat4(1.0f), Scale);
 		}
+		void SetTransform(const glm::mat4& transform)
+		{
+			Math::DecomposeTransform(transform, Translation, Rotation, Scale);
+		}
 	};
 
 	struct SpriteRendererComponent
@@ -61,6 +65,26 @@ namespace NanoCore{
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;
 		SpriteRendererComponent(const glm::vec4& color)
 			: Color(color) {}
+	};
+
+	struct PrefabComponent
+	{
+		UUID PrefabID = 0;
+		UUID EntityID = 0;
+
+		PrefabComponent() = default;
+		PrefabComponent(const PrefabComponent& other) = default;
+	};
+
+	struct RelationshipComponent
+	{
+		UUID ParentHandle = 0;
+		std::vector<UUID> Children;
+
+		RelationshipComponent() = default;
+		RelationshipComponent(const RelationshipComponent& other) = default;
+		RelationshipComponent(UUID parent)
+			: ParentHandle(parent) {}
 	};
 
 	struct CircleRendererComponent
@@ -76,16 +100,36 @@ namespace NanoCore{
 	struct CameraComponent
 	{
 		SceneCamera Camera;
-		bool Primary = true; // TODO: think about moving to Scene
+		bool Primary = true; 
+		//---->
 		bool FixedAspectRatio = false;
 
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent&) = default;
+
+		operator SceneCamera& () { return Camera; }
+		operator const SceneCamera& () const { return Camera; }
 	};
 
+	struct TextComponent
+	{
+		std::string TextString = "";
+		size_t TextHash;
+
+		// Font
+		UUID FontHandle;
+		glm::vec4 Color = { 1.0f, 1.0f, 1.0f, 1.0f };
+		float LineSpacing = 0.0f;
+		float Kerning = 0.0f;
+
+		// Layout
+		float MaxWidth = 10.0f;
+
+		TextComponent() = default;
+		TextComponent(const TextComponent& other) = default;
+	};
 	// Forward declaration
 	class ScriptableEntity;
-
 	struct NativeScriptComponent
 	{
 		ScriptableEntity* Instance = nullptr;
@@ -100,9 +144,7 @@ namespace NanoCore{
 			DestroyScript = [](NativeScriptComponent* nsc) { delete nsc->Instance; nsc->Instance = nullptr; };
 		}
 	};
-
 	// Physics
-
 	struct Rigidbody2DComponent
 	{
 		enum class BodyType { Static = 0, Dynamic, Kinematic };
@@ -151,10 +193,25 @@ namespace NanoCore{
 		CircleCollider2DComponent() = default;
 		CircleCollider2DComponent(const CircleCollider2DComponent&) = default;
 	};
-
 	template<typename... Component>
 	struct ComponentGroup
 	{
+	};
+
+	struct ScriptComponent
+	{
+		UUID ScriptClassHandle = 0;
+		void* ManagedInstance = nullptr;
+		std::vector<uint32_t> FieldIDs;
+		std::string ClassName;
+
+		// NOTE(Peter): Get's set to true when OnCreate has been called for this entity
+		bool IsRuntimeInitialized = false;
+
+		ScriptComponent() = default;
+		ScriptComponent(const ScriptComponent& other) = default;
+		ScriptComponent(UUID scriptClassHandle)
+			: ScriptClassHandle(scriptClassHandle) {}
 	};
 
 	using AllComponents =

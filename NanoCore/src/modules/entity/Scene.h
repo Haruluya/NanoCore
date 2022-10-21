@@ -36,9 +36,10 @@ namespace NanoCore{
 		void OnViewportResize(uint32_t width, uint32_t height);
 
 		void DuplicateEntity(Entity entity);
-
+		Entity GetEntityByUUID(UUID uuid);
 		Entity GetPrimaryCameraEntity();
-
+		bool IsRunning() const { return m_IsRunning; }
+		Entity FindEntityByName(std::string_view name);
 		template<typename... Components>
 		auto GetAllEntitiesWith()
 		{
@@ -56,7 +57,11 @@ namespace NanoCore{
 		entt::registry m_Registry;
 		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 
+		bool m_IsRunning = false;
+
+		std::unordered_map<UUID, entt::entity> m_EntityMap;
 		b2World* m_PhysicsWorld = nullptr;
+
 
 		friend class Entity;
 		friend class SceneSerializer;

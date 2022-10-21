@@ -9,6 +9,8 @@
 #include "modules/utils/PlatformUtils.h"
 
 #include "modules/info/Project.h"
+#include "modules/script/ScriptEngine.h"
+
 
 namespace NanoCore{
 
@@ -30,6 +32,8 @@ namespace NanoCore{
 		m_Window->SetEventCallback(NANO_EVENT_BIND(Application::OnEvent));
 
 		Renderer::Init();
+		//ScriptEngine::Init();
+
 
 		m_UILayer = new UILayer();
 		PushOverlay(m_UILayer);
@@ -45,6 +49,7 @@ namespace NanoCore{
 		RA_PROFILE_FUNCTION();
 
 		Renderer::Shutdown();
+		//ScriptEngine::Shutdown();
 	}
 
 	void Application::PushLayer(Layer* layer)
@@ -84,6 +89,13 @@ namespace NanoCore{
 		}
 	}
 
+	void Application::SubmitToMainThread(const std::function<void()>& function)
+	{
+		std::scoped_lock<std::mutex> lock(m_MainThreadQueueMutex);
+
+		m_MainThreadQueue.emplace_back(function);
+	}
+
 	void Application::Run()
 	{
 		RA_PROFILE_FUNCTION();
@@ -95,6 +107,9 @@ namespace NanoCore{
 			float time = Time::GetTime();
 			Timestep timestep = time - m_LastFrameTime;
 			m_LastFrameTime = time;
+
+			//ExecuteMainThreadQueue();
+
 			ProcessEvents();
 			if (!m_Minimized)
 			{
@@ -153,6 +168,16 @@ namespace NanoCore{
 			func();
 			m_EventQueue.pop();
 		}
+	}
+
+	void Application::ExecuteMainThreadQueue()
+	{
+		std::scoped_lock<std::mutex> lock(m_MainThreadQueueMutex);
+
+		for (auto& func : m_MainThreadQueue)
+			func();
+
+		m_MainThreadQueue.clear();
 	}
 
 }

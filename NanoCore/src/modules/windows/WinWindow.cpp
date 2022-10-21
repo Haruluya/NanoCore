@@ -5,7 +5,7 @@
 
 #include "modules/events/ApplicationEvent.h"
 #include "modules/events/EventTypes.h"
-
+#include "core/base/Application.h"
 #include "modules/rendering/Renderer.h"
 
 #include "Platform/OpenGL/OpenGLContext.h"
@@ -69,7 +69,7 @@ namespace NanoCore{
 
 		// Set icon.
 		GLFWimage* icon = new GLFWimage();
-		icon->pixels = stbi_load("resources/icons/nanocore_label_bg.png", &icon->width, &icon->height, 0, 4);
+		icon->pixels = stbi_load((Application::Get().GetSpecification().LogoPath).c_str(), &icon->width, &icon->height, 0, 4);
 		if (icon->pixels) {
 			glfwSetWindowIcon(m_Window, 1, icon);
 		}

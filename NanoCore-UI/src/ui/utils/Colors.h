@@ -38,7 +38,7 @@ namespace NanoCore::UI
 			: powf((thesRGBValue + 0.055f) / 1.055f, 2.2f);
 	}
 
-	ImVec4 ConvertFromSRGB(ImVec4 colour)
+	inline ImVec4 ConvertFromSRGB(ImVec4 colour)
 	{
 		return ImVec4(Convert_sRGB_FromLinear(colour.x),
 			Convert_sRGB_FromLinear(colour.y),
@@ -46,7 +46,7 @@ namespace NanoCore::UI
 			colour.w);
 	}
 
-	ImVec4 ConvertToSRGB(ImVec4 colour)
+	inline ImVec4 ConvertToSRGB(ImVec4 colour)
 	{
 		return ImVec4(std::pow(colour.x, 2.2f),
 			std::pow(colour.y, 2.2f),

@@ -1,5 +1,5 @@
 #include "ncpch.h"
-#include "Math.h"
+#include "NanoMath.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_decompose.hpp>

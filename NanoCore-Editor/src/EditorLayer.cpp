@@ -15,7 +15,7 @@
 
 #include "utils/ResourcesLoadFactory.h"
 
-#include "ui/NanoCoreUI.hpp"
+#include "ui/NanoCoreUI.h"
 
 
 namespace NanoCore {

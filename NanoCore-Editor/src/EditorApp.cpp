@@ -24,7 +24,7 @@ namespace NanoCore {
 		ApplicationSpecification spec;
 		spec.Name = u8"NanoCore-Engine";
 		spec.CommandLineArgs = args;
-
+		spec.LogoPath = "resources/icons/nanocore_label_bg.png";
 		return new EditorApp(spec);
 	}
 

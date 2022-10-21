@@ -58,7 +58,7 @@
 
 #include "modules/entity/Entity.h"
 #include "modules/entity/Components.h"
-#include "modules/entity/Assert.h"
+#include "modules/entity/Asset.h"
 #include "modules/entity/SceneSerializer.h"
 
 #include "core/math/NanoMath.h"
@@ -70,3 +70,7 @@
 #include "modules/utils/Hash.h"
 
 #include "modules/info/Project.h"
+
+
+#include "modules/script/ScriptEngine.h"
+#include "modules/script/ScriptGlue.h"
